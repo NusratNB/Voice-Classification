@@ -11,6 +11,7 @@ import org.tensorflow.lite.support.label.Category
 import java.nio.ByteBuffer
 
 
+
 typealias RecognitionListener = (recognition: List<Recognition>) -> Unit
 private const val MAX_RESULT_DISPLAY = 3
 private const val TAG = "TFL Classify" // Name for logging

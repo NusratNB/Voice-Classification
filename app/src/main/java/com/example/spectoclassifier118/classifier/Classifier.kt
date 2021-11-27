@@ -9,7 +9,11 @@ import com.example.spectoclassifier118.viewmodel.Recognition
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.label.Category
 import java.nio.ByteBuffer
-
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.support.image.ImageProcessor;
+import org.tensorflow.lite.support.image.ops.ResizeOp;
+import org.tensorflow.lite.support.model.Model
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 
 
 typealias RecognitionListener = (recognition: List<Recognition>) -> Unit
@@ -18,10 +22,20 @@ private const val TAG = "TFL Classify" // Name for logging
 //private lateinit var rotationMatrix: Matrix
 private var width:Int = 300
 private var height:Int = 300
+lateinit var tfImagefromBitmap: TensorImage
+lateinit var tfImage: TensorImage
 
 class Classifier(ctx: Context) {
 
     private val model = EfficientB4.newInstance(ctx)
+    val flowerModel: EfficientB4 by lazy{
+
+        // TODO 6. Optional GPU acceleration
+        val options = Model.Options.Builder().setDevice(Model.Device.GPU).build()
+
+        // Initialize the Flower Model
+        EfficientB4.newInstance(ctx, options)
+    }
 
     fun floatArrayToGrayscaleBitmap (
         floatArray: FloatArray,
@@ -61,28 +75,50 @@ class Classifier(ctx: Context) {
         return bmp
     }
 
-     fun analyze(bitmap: Bitmap): MutableList<Recognition> {
+     fun analyze(bitmap: Bitmap): List<Category> {
          var resizedBitmap: Bitmap = resizeBitmap(bitmap, width, height)
+         val imageProcessor = ImageProcessor.Builder()
+             .add(ResizeOp(300, 300, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+             .build()
 
         val items = mutableListOf<Recognition>()
 
-        // TODO 2: Convert Image to Bitmap then to TensorImage
-        var tfImage = TensorImage.fromBitmap(resizedBitmap)
+//         tfImage.load(bitmap);
 
+
+         // TODO 2: Convert Image to Bitmap then to TensorImage
+         tfImagefromBitmap = TensorImage.fromBitmap(resizedBitmap)
+
+         var tImage = TensorImage(DataType.FLOAT32)
+         var tensorImage = tImage.load(resizedBitmap)
+//         var byteBuffer = tensorImage.buffer
+
+         var byteBuffer = tfImagefromBitmap.getTensorBuffer().getBuffer()
+
+         val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(4, 1, 300, 300, 3), DataType.FLOAT32)
+
+//         inputFeature0.loadBuffer(byteBuffer)
+//         tfImage = imageProcessor.process(tfImagefromBitmap);
+         tfImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
 //         Log.(tfImage, "tf image");
+         var outputs = model.process(tfImage)
+         val probability = outputs.probabilityAsCategoryList
+//         val outputFeature0 = outputs.outputFeature0AsTensorBuffer
 
         // TODO 3: Process the image using the trained model, sort and pick out the top results
-        val outputs = model.process(tfImage)
-            .probabilityAsCategoryList.apply {
-                sortByDescending { it.score } // Sort with highest confidence first
-            }.take(MAX_RESULT_DISPLAY) // take the top results
 
-        // TODO 4: Converting the top probability items into a list of recognitions
-        for (output in outputs) {
-            items.add(Recognition(output.label, output.score))
-        }
 
-         return items
+//            .probabilityAsCategoryList.apply {
+//                sortByDescending { it.score } // Sort with highest confidence first
+//            }.take(MAX_RESULT_DISPLAY) // take the top results
+//
+//        // TODO 4: Converting the top probability items into a list of recognitions
+//        for (output in outputs) {
+//            items.add(Recognition(output.label, output.score))
+//        }
+                 model.close()
+         return probability
+
     }
 
      fun resizeBitmap(bmt:Bitmap, width: Int, height: Int):Bitmap{
@@ -93,6 +129,10 @@ class Classifier(ctx: Context) {
             height,
             false
         )
+    }
+
+    fun  getTfImage(): String {
+        return tfImage.getDataType().toString()
     }
 
 

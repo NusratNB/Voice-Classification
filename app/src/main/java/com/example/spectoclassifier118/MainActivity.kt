@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import com.example.spectoclassifier118.classifier.Classifier
 import android.widget.TextView
+import org.tensorflow.lite.support.image.TensorImage
 
 class MainActivity : AppCompatActivity() {
     lateinit var imageView: ImageView
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private var resBitmap: Bitmap? = null
     private lateinit var classifier: Classifier
     private var size:Int = 300
+    var receivedTensorImage: Bitmap? = null
 
 
 
@@ -44,20 +46,27 @@ class MainActivity : AppCompatActivity() {
             val result = bitmap?.let { classifier.analyze(it) }
             val firstResult = result?.get(0)?.toString()
 
-            var toast = Toast.makeText(this, firstResult, Toast.LENGTH_LONG)
+
+            var toast = Toast.makeText(this, result.toString(), Toast.LENGTH_LONG)
             val v = toast.view!!.findViewById<View>(android.R.id.message) as TextView
             v.setTextColor(Color.RED)
             toast.show()
 
+
         }
+
         showBtn = findViewById(R.id.showButton)
         showBtn.setOnClickListener{
-            resBitmap = bitmap?.let { it1 -> classifier.resizeBitmap(it1, size, size) }
-            imageView.setImageBitmap(resBitmap)
+//            resBitmap = bitmap?.let { it1 -> classifier.resizeBitmap(it1, size, size) }
+            var tfHeigt: String = classifier.getTfImage()
+//            imageView.setImageBitmap(receivedTensorImage)
+            var toast = Toast.makeText(this, tfHeigt, Toast.LENGTH_LONG)
+            val v = toast.view!!.findViewById<View>(android.R.id.message) as TextView
+            v.setTextColor(Color.RED)
+            toast.show()
         }
 
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

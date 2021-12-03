@@ -8,3 +8,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "SpectoClassifier118"
 include ':app'
+include ':mylibrary'

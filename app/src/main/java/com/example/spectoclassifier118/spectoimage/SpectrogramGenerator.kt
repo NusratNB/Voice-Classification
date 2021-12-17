@@ -17,8 +17,8 @@ class SpectrogramGenerator (ctx: Context) {
 
     lateinit var imageView: ImageView
     lateinit var bitmap: Bitmap
-    lateinit var wavList:  ArrayList<Any?>
-    lateinit var filename: String
+    var wavList:  ArrayList<Any?> = ArrayList()
+    var filename: String = ""
 
 
 
@@ -85,20 +85,38 @@ class SpectrogramGenerator (ctx: Context) {
         return filename
     }
 
-    fun generateImage(ctx: Context): Bitmap {
-        val sdcardFile = Environment.getExternalStorageDirectory()
-        val wavnames = getSDcardFile(sdcardFile)
+    @JvmName("getWavList1")
+    fun getWavList(): ArrayList<Any?> {
+        return wavList
+    }
+
+    @JvmName("setFilename1")
+    fun setFilename(receivedFileName: String){
+        filename = receivedFileName
+    }
+
+    fun initVars(pathToWav: File){
+
+//        val sdcardFile = Environment.getExternalStorageDirectory()
+        val wavnames = getSDcardFile(pathToWav)
         // Make the file path
-        val sdPath = Environment.getExternalStorageDirectory().absolutePath
-        filename = wavList.get(wavList.size-1).toString()
-        val path = sdPath + File.separator + filename
+
+        filename = wavList.get(0).toString()
+
+    }
+
+
+
+    fun generateImage(ctx: Context, path: File): Bitmap {
+        val sdPath = path.absolutePath
+//        val path = sdPath + File.separator + filename
         var logmelspec = Array(0) {
             DoubleArray(
                 0
             )
         }
         try {
-            logmelspec = LogMelSpec.main(path)
+            logmelspec = LogMelSpec.main(path.toString())
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: WavFileException) {

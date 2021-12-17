@@ -2,17 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/imageView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="600dp"
-        />
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            android:layout_marginTop="10dp"/>
+
+    </LinearLayout>
+
+
+
     <TextView
         android:id="@+id/result"
         android:layout_width="wrap_content"
@@ -20,49 +28,114 @@
         android:layout_marginTop="10sp"
         android:text=""
         android:textColor="@color/teal_700"
-        android:textSize="10sp"
+        android:textSize="15sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf = "@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf = "@+id/ll_buttons"        />
+        app:layout_constraintBottom_toBottomOf = "@+id/txtSpeed"  />
 
-    <LinearLayout
-        android:id="@+id/ll_buttons"
+    <TextView
+        android:id="@+id/txtSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        android:padding="5dp"
+        android:layout_marginTop="5sp"
+        android:text=""
+        android:textColor="@color/teal_700"
+        android:textSize="15sp"
+        android:textStyle="bold"
         app:layout_constraintTop_toBottomOf = "@+id/result"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf = "parent"
+        app:layout_constraintBottom_toBottomOf = "@+id/audioName"  />
+
+
+
+    <TextView
+        android:id="@+id/audioName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5sp"
+        android:text=""
+        android:textColor="@color/teal_700"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf = "@+id/txtSpeed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf = "@+id/ll_buttons"  />
+
+    <LinearLayout
+        android:id="@+id/ll_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf = "@+id/audioName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf = "@+id/ll_orderAudio"
         >
 
         <Button
-            android:id="@+id/buttonLoadPicture"
-            android:layout_margin="20dp"
+            android:id="@+id/btnRecord"
+            android:layout_margin="5dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Load"
-            android:padding="5dp"/>
+            android:text=""
+            />
 
         <Button
             android:id="@+id/classificationButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:text="predict"
-            android:padding="5dp"/>
+            android:layout_margin="5dp"
+            android:text="predict"/>
 
         <Button
             android:id="@+id/showButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_margin="5dp"
             android:text="show"
             android:padding="5dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_orderAudio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf = "@+id/ll_buttons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf = "parent">
+
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="Play"/>
+
+        <Button
+            android:id="@+id/previous"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="Prev"/>
+
+        <Button
+            android:id="@+id/next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="Next"
+            />
+
+
 
     </LinearLayout>
 

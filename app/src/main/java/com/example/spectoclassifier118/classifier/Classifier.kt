@@ -2,22 +2,14 @@ package com.example.spectoclassifier118.classifier
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
-import android.graphics.Matrix
-import android.util.Log
-import androidx.annotation.NonNull
 import com.example.spectoclassifier118.ml.EfficientB4
 import com.example.spectoclassifier118.viewmodel.Recognition
 import org.tensorflow.lite.support.image.TensorImage
-import org.tensorflow.lite.support.label.Category
-import java.nio.ByteBuffer
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
-import org.tensorflow.lite.support.model.Model
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import org.tensorflow.lite.support.image.ops.ResizeOp
-
+import android.os.SystemClock
 
 
 
@@ -34,28 +26,35 @@ lateinit var tfImagefromBitmap: TensorImage
 class Classifier(ctx: Context) {
 
     private val model = EfficientB4.newInstance(ctx)
-     fun analyze(bitmap: Bitmap): List<Category> {
+     fun analyze(bitmap: Bitmap): MutableList<Recognition> {
+
+         val items = mutableListOf<Recognition>()
 
          var imageProcessor = ImageProcessor.Builder()
-             .add(ResizeOp(300, 300, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
-             .add(NormalizeOp(127.5f, 128.5f))
+             .add(NormalizeOp(127.0f, 128.0f))
              .build()
 
 
 
+         val resBtm: Bitmap = Bitmap.createScaledBitmap(
+             bitmap,
+             300,
+             300,
+             true
+         )
 
+         val newbtm = AlphaToBlack(resBtm)
 
-         val newbtm = AlphaToBlack(bitmap)
          // TODO 2: Convert Image to Bitmap then to TensorImage
          tfImagefromBitmap = TensorImage.fromBitmap(newbtm)
-         var tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
-         var normalized = imageProcessor.process(tfImage);
-         var byteBuffer = normalized.getTensorBuffer().getBuffer()
+         val tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
+         val normalized = imageProcessor.process(tfImage);
+         val byteBuffer = normalized.tensorBuffer.buffer
          val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 300, 300, 3), DataType.FLOAT32)
          inputFeature0.loadBuffer(byteBuffer)
 
 
-         tfImagefromBitmap = imageProcessor.process(tfImagefromBitmap)
+//         tfImagefromBitmap = imageProcessor.process(tfImagefromBitmap)
 
 //        var tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
 //         Log.(tfImage, "tf image");
@@ -65,12 +64,12 @@ class Classifier(ctx: Context) {
                 sortByDescending { it.score } // Sort with highest confidence first
             }.take(MAX_RESULT_DISPLAY) // take the top results
 //
-//        // TODO 4: Converting the top probability items into a list of recognitions
-//        for (output in probability) {
-//            items.add(Recognition(output.label, output.score))
-//        }
-         model.close()
-         return probability
+//
+        for (output in probability) {
+            items.add(Recognition(output.label, output.score))
+        }
+//         model.close()
+         return items
 
     }
 

@@ -2,6 +2,7 @@ package com.example.spectoclassifier118.classifier
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.annotation.NonNull
 import com.example.spectoclassifier118.ml.TCResNet14SE
 import com.example.spectoclassifier118.viewmodel.Recognition
 import org.tensorflow.lite.support.image.TensorImage
@@ -71,8 +72,8 @@ class Classifier(ctx: Context) {
 //         val byteBuffer = normalized.tensorBuffer.buffer
 
 
-        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * data.size * data[0].size)
-//        byteBuffer.order(ByteOrder.nativeOrder())
+        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * data.size * data[0].size*1)
+        byteBuffer.order(ByteOrder.nativeOrder())
         val index = 0
         for (i in 0..data.size-1) {
             for (j in 0..data[0].size-1) {
@@ -108,6 +109,7 @@ class Classifier(ctx: Context) {
 //            items.add(Recognition(output.label, output.score))
 //        }
 //         model.close()
+//        val res = probability.dataType.toString()
         return probability.floatArray
 
     }

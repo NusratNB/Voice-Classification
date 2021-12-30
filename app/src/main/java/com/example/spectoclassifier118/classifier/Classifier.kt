@@ -2,75 +2,117 @@ package com.example.spectoclassifier118.classifier
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.example.spectoclassifier118.ml.EfficientB4
+import com.example.spectoclassifier118.ml.TCResNet14SE
 import com.example.spectoclassifier118.viewmodel.Recognition
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.DataType;
-import org.tensorflow.lite.support.common.ops.NormalizeOp
-import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import android.os.SystemClock
-
-
+//import org.tensorflow.lite.gpu.CompatibilityList
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 
 typealias RecognitionListener = (recognition: List<Recognition>) -> Unit
 private const val MAX_RESULT_DISPLAY = 3
 private const val TAG = "TFL Classify" // Name for logging
 //private lateinit var rotationMatrix: Matrix
-private var width:Int = 300
-private var height:Int = 300
+private var width:Int = 224
+private var height:Int = 224
 lateinit var tfImagefromBitmap: TensorImage
-//lateinit var tfImage: TensorImage
+var inferenceTime: Float = 0.0f
 
 class Classifier(ctx: Context) {
 
-    private val model = EfficientB4.newInstance(ctx)
-     fun analyze(bitmap: Bitmap): MutableList<Recognition> {
+    private val model = TCResNet14SE.newInstance(ctx)
 
-         val items = mutableListOf<Recognition>()
+    //    private val model: EfficientB0 by lazy{
+//
+//        // TODO 6. Optional GPU acceleration
+//        val compatList = CompatibilityList()
+//
+//        val options = if(compatList.isDelegateSupportedOnThisDevice) {
+//            Log.d(TAG, "This device is GPU Compatible ")
+//            Model.Options.Builder().setDevice(Model.Device.GPU).build()
+//        } else {
+//            Log.d(TAG, "This device is GPU Incompatible ")
+//            Model.Options.Builder().setNumThreads(4).build()
+//        }
+//
+//        // Initialize the Flower Model
+//        EfficientB0.newInstance(ctx, options)
+//    }
+    fun analyze(data: Array<FloatArray>): FloatArray {
 
-         var imageProcessor = ImageProcessor.Builder()
-             .add(NormalizeOp(127.0f, 128.0f))
-             .build()
+        val items = mutableListOf<Recognition>()
+//
+//         var imageProcessor = ImageProcessor.Builder()
+//             .add(NormalizeOp(127.5f, 127.5f))
+//             .build()
 
 
+//         val resBtm: Bitmap = Bitmap.createScaledBitmap(
+//             bitmap,
+//             224,
+//             224,
+//             true
+//         )
+//        var startTime = System.currentTimeMillis()
 
-         val resBtm: Bitmap = Bitmap.createScaledBitmap(
-             bitmap,
-             300,
-             300,
-             true
-         )
+//         val newbtm = AlphaToBlack(resBtm)
+//    var endTime = System.currentTimeMillis()
+//    inferenceTime = (endTime - startTime).toFloat()
 
-         val newbtm = AlphaToBlack(resBtm)
+        // TODO 2: Convert Image to Bitmap then to TensorImage
+//         tfImagefromBitmap = TensorImage.fromBitmap(resBtm)
+//         val tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
+//
+//         val normalized = imageProcessor.process(tfImage);
 
-         // TODO 2: Convert Image to Bitmap then to TensorImage
-         tfImagefromBitmap = TensorImage.fromBitmap(newbtm)
-         val tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
-         val normalized = imageProcessor.process(tfImage);
-         val byteBuffer = normalized.tensorBuffer.buffer
-         val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 300, 300, 3), DataType.FLOAT32)
-         inputFeature0.loadBuffer(byteBuffer)
+//         val byteBuffer = normalized.tensorBuffer.buffer
+
+
+        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * data.size * data[0].size)
+//        byteBuffer.order(ByteOrder.nativeOrder())
+        val index = 0
+        for (i in 0..data.size-1) {
+            for (j in 0..data[0].size-1) {
+                byteBuffer.putFloat(data[i][j])
+            }
+        }
+
+        val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, 101, 40), DataType.FLOAT32)
+//         val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
+        audioClip.loadBuffer(byteBuffer)
+//         inputFeature0.loadBuffer(byteBuffer)
 
 
 //         tfImagefromBitmap = imageProcessor.process(tfImagefromBitmap)
 
 //        var tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
 //         Log.(tfImage, "tf image");
-         var outputs = model.process(inputFeature0)
-//         val outputFeature0 = outputs.outputFeature0AsTensorBuffer
-         val probability = outputs.probabilityAsCategoryList.apply {
-                sortByDescending { it.score } // Sort with highest confidence first
-            }.take(MAX_RESULT_DISPLAY) // take the top results
-//
-//
-        for (output in probability) {
-            items.add(Recognition(output.label, output.score))
-        }
-//         model.close()
-         return items
+        var startTime = System.currentTimeMillis()
+        var outputs = model.process(audioClip)
+//         var outputs = model.process(inputFeature0)
+        var endTime = System.currentTimeMillis()
+        inferenceTime = (endTime - startTime).toFloat()
 
+
+//         val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+//         val probability = outputs.probabilityAsCategoryList.apply {
+//                sortByDescending { it.score } // Sort with highest confidence first
+//            }.take(MAX_RESULT_DISPLAY) // take the top results
+        val probability = outputs.probabilityAsTensorBuffer
+        //
+//
+//        for (output in probability) {
+//            items.add(Recognition(output.label, output.score))
+//        }
+//         model.close()
+        return probability.floatArray
+
+    }
+    fun getInfTime(): Float {
+        return inferenceTime
     }
 
 

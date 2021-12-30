@@ -8,6 +8,7 @@ import android.widget.ImageView
 import com.example.mylibrary.FileFormatNotSupportedException
 import com.example.mylibrary.LogMelSpec
 import com.example.mylibrary.WavFileException
+import com.example.spectoclassifier118.classifier.inferenceTime
 import java.io.File
 import java.io.IOException
 import kotlin.collections.ArrayList
@@ -19,6 +20,7 @@ class SpectrogramGenerator (ctx: Context) {
     lateinit var bitmap: Bitmap
     var wavList:  ArrayList<Any?> = ArrayList()
     var filename: String = ""
+    var inferenceTime: Float = 0.0f
 
 
 
@@ -104,11 +106,15 @@ class SpectrogramGenerator (ctx: Context) {
         filename = wavList.get(0).toString()
 
     }
+    fun getInfTime(): Float {
+        return com.example.spectoclassifier118.classifier.inferenceTime
+    }
 
 
 
     fun generateImage(ctx: Context, path: File): Bitmap {
         val sdPath = path.absolutePath
+        var startTime = System.currentTimeMillis()
 //        val path = sdPath + File.separator + filename
         var logmelspec = Array(0) {
             DoubleArray(
@@ -126,6 +132,8 @@ class SpectrogramGenerator (ctx: Context) {
         }
 
         var normalizedLogmelSpec = minMaxScaling(logmelspec)
+        var endTime = System.currentTimeMillis()
+        inferenceTime = (endTime - startTime).toFloat()
         var spectoImg = SpectrogramView(ctx, normalizedLogmelSpec)
         bitmap = spectoImg.getBitmap()
         val width: Int = bitmap.getWidth()

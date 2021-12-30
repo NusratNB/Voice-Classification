@@ -49,13 +49,14 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
-    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
+    implementation 'org.tensorflow:tensorflow-lite-metadata:0.3.0'
     implementation project(path: ':mylibrary')
     implementation files('libs\\ae-awt.jar')
     testImplementation 'junit:junit:'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation 'org.tensorflow:tensorflow-lite:2.5.0'
+//    implementation 'org.tensorflow:tensorflow-lite:2.5.0'
+//    implementation 'org.tensorflow:tensorflow-lite-gpu:2.5.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

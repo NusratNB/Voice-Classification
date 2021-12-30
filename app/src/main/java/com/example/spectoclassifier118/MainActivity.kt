@@ -23,7 +23,7 @@ import android.os.SystemClock
 import androidx.core.app.ActivityCompat
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
-import com.google.android.material.button.MaterialButtonToggleGroup
+import com.example.spectoclassifier118.spectoimage.LogMelSpecKt
 
 
 class MainActivity : AppCompatActivity() {
@@ -49,10 +49,14 @@ class MainActivity : AppCompatActivity() {
     lateinit var pathToFolds: File
     var imgGenTime: Float = 0.0f
     var inferenceTime: Float = 0.0f
+    var modelInfTime: Float = 0.0f
     lateinit var txtSpeed: TextView
     lateinit var btnPlay: Button
     lateinit var fileName: File
     var prevFileName: File =File("")
+
+    lateinit var fullAudioPath: File
+    lateinit var pathToRecords: File
 
 
     private val requestPermission: ActivityResultLauncher<Array<String>> =
@@ -90,9 +94,11 @@ class MainActivity : AppCompatActivity() {
         }
 //        pathToFolds = File(externalCacheDir?.absoluteFile, "test_500" )
         initClassifierSpectrogramGenerator()
-        var pathToRecords = File(externalCacheDir?.absoluteFile, "AudioRecord" ).toString()
-        var audioRecoder = RecordWavMaster(this, pathToRecords)
+        pathToRecords = File(externalCacheDir?.absoluteFile, "AudioRecord" )
+        var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
+        val generator = LogMelSpecKt()
+
 
 
 
@@ -111,7 +117,8 @@ class MainActivity : AppCompatActivity() {
                 audioRecoder.recordWavStop()
                 btnRecord.text = "Start"
                 recording = true
-                fileName = audioRecoder.getAudioName()
+                fileName = audioRecoder.audioName
+                fullAudioPath = File(fileName.toString()) //File(pathToRecords.toString(), fileName.toString())
                 if (prevFileName.exists()){
                     prevFileName.delete()
                 }
@@ -122,15 +129,28 @@ class MainActivity : AppCompatActivity() {
         btnClassification = findViewById(R.id.classificationButton)
         btnClassification.setOnClickListener{
             if(fileName.exists()){
+                val data = generator.getMFCC(fullAudioPath.path)
+                val row = data.size
+                val column = data[0].size
+                val transpose = Array(column) { FloatArray(row) }
+                for (i in 0..row - 1) {
+                    for (j in 0..column - 1) {
+                        transpose[j][i] = data[i][j]
+                    }
+                }
                 resultCls = findViewById(R.id.result)
                 var startTime = SystemClock.uptimeMillis()
-                val result = trimmedBtm?.let { classifier.analyze(it) }
+                val result = transpose?.let { classifier.analyze(it) }
                 var endTime = SystemClock.uptimeMillis()
                 inferenceTime = (endTime - startTime).toFloat()
-                val firstResult = result?.get(0)?.toString()
-                resultCls.text ="Result: " + firstResult
-                txtSpeed.text = "Inference: " + inferenceTime.toString() + " ms;   Data gen: " + imgGenTime.toString() + " ms"
-                prevFileName = fileName
+//                modelInfTime = classifier.getInfTime()
+                val maxIdx = result.maxOrNull()?.let { it1 -> result.indexOfFirst { it == it1 } }
+                Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
+//                var tt = spectogenerator.getInfTime()
+//                val firstResult = result?.get(0)?.toString()
+//                resultCls.text ="Result: " + firstResult
+//                txtSpeed.text = "Model time: " + modelInfTime.toString() + " Inference: " + inferenceTime.toString() + " ms;   Data gen: " + tt.toString() + " ms"
+//                prevFileName = fileName
             } else{
                 Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
             }
@@ -144,59 +164,62 @@ class MainActivity : AppCompatActivity() {
 
         showBtn = findViewById(R.id.showButton)
         showBtn.setOnClickListener{
+            Toast.makeText(this, "Not working", Toast.LENGTH_SHORT).show()
 
-            var startImageGenTime = SystemClock.uptimeMillis()
-            trimmedBtm = spectogenerator.generateImage(this, fileName)
-            var endImageGenTime = SystemClock.uptimeMillis()
-            imgGenTime = ((endImageGenTime - startImageGenTime).toFloat())
-            wavList = spectogenerator.getWavList()
-            audioName = findViewById(R.id.audioName)
-            var strAudioName: String = spectogenerator.getFilename()
-
-            imageView.setImageBitmap(trimmedBtm)
-            audioName.text ="Audio name: " + strAudioName
-            txtSpeed.text ="Data generating time: " + imgGenTime.toString() + " ms"
+//            var startImageGenTime = SystemClock.uptimeMillis()
+//            trimmedBtm = spectogenerator.generateImage(this, fileName)
+//            var endImageGenTime = SystemClock.uptimeMillis()
+//            imgGenTime = ((endImageGenTime - startImageGenTime).toFloat())
+//            wavList = spectogenerator.getWavList()
+//            audioName = findViewById(R.id.audioName)
+//            var strAudioName: String = spectogenerator.getFilename()
+//
+//            imageView.setImageBitmap(trimmedBtm)
+////            audioName.text ="Audio name: " + strAudioName
+//            txtSpeed.text ="Data generating time: " + imgGenTime.toString() + " ms"
         }
 
 
         nextBtn = findViewById(R.id.next)
         nextBtn.setOnClickListener{
+            Toast.makeText(this, "Not working", Toast.LENGTH_SHORT).show()
 
-            if (wavList.size>=0 && auidoIndex<=wavList.size){
-                auidoIndex += 1
-
-                if (auidoIndex >= wavList.size){
-                    Toast.makeText(this, "This is end of the list", Toast.LENGTH_SHORT).show()
-                    setSpectoName = spectogenerator.setFilename(wavList[wavList.size - 1] as String).toString()
-                    audioName.text ="Audio name: " + wavList[wavList.size - 1] as String
-                    auidoIndex = wavList.size-1
-                } else{
-
-                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
-                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
-
-                }
-
-            }
+//            if (wavList.size>=0 && auidoIndex<=wavList.size){
+//                auidoIndex += 1
+//
+//                if (auidoIndex >= wavList.size){
+//                    Toast.makeText(this, "This is end of the list", Toast.LENGTH_SHORT).show()
+//                    setSpectoName = spectogenerator.setFilename(wavList[wavList.size - 1] as String).toString()
+//                    audioName.text ="Audio name: " + wavList[wavList.size - 1] as String
+//                    auidoIndex = wavList.size-1
+//                } else{
+//
+//                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
+//                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
+//
+//                }
+//
+//            }
         }
         prevBtn = findViewById(R.id.previous)
         prevBtn.setOnClickListener{
-            if (auidoIndex>=0 && wavList.size>0){
-                auidoIndex -=1
-
-                if (auidoIndex <= 0){
-                    Toast.makeText(this, "This is beginning of the list", Toast.LENGTH_SHORT).show()
-                    setSpectoName = spectogenerator.setFilename(wavList[0] as String).toString()
-                    audioName.text ="Audio name: " + wavList[0] as String
-                    auidoIndex = 0
-                }else{
-
-                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
-                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
-
-                }
-
-            }
+            Toast.makeText(this, "Not working", Toast.LENGTH_SHORT).show()
+//            if (auidoIndex>=0 && wavList.size>0){
+//                auidoIndex -=1
+//
+//                if (auidoIndex <= 0){
+//                    Toast.makeText(this, "This is beginning of the list", Toast.LENGTH_SHORT).show()
+//                    setSpectoName = spectogenerator.setFilename(wavList[0] as String).toString()
+//                    audioName.text ="Audio name: " + wavList[0] as String
+//                    auidoIndex = 0
+//                }else{
+//
+//                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
+//                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
+//
+//                }
+//
+//            }
         }
     }
 
@@ -250,15 +273,15 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK && requestCode == pickImage) {
-            imageUri = data?.data
-            imageView.setImageURI(imageUri)
-            bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
-            resBitmap= bitmap?.let { resizeBitmap(it, 300, 300) }
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (resultCode == RESULT_OK && requestCode == pickImage) {
+//            imageUri = data?.data
+//            imageView.setImageURI(imageUri)
+//            bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
+//            resBitmap= bitmap?.let { resizeBitmap(it, 224, 224) }
+//        }
+//    }
 
     private fun initClassifierSpectrogramGenerator() {
 

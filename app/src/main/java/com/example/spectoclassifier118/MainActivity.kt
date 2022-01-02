@@ -1,6 +1,7 @@
 package com.example.spectoclassifier118
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     var auidoIndex: Int = 0
     lateinit var pathToFolds: File
     var imgGenTime: Float = 0.0f
+    var dataGenTime: Float = 0.0f
     var inferenceTime: Float = 0.0f
     var modelInfTime: Float = 0.0f
     lateinit var txtSpeed: TextView
@@ -84,6 +86,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,7 +132,10 @@ class MainActivity : AppCompatActivity() {
         btnClassification = findViewById(R.id.classificationButton)
         btnClassification.setOnClickListener{
             if(fileName.exists()){
+                val datagenStartTime = SystemClock.uptimeMillis()
                 val data = generator.getMFCC(fullAudioPath.path)
+                val datagenEndTime = SystemClock.uptimeMillis()
+                dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
                 val row = data.size
                 val column = data[0].size
                 val transpose = Array(column) { FloatArray(row) }
@@ -141,15 +147,19 @@ class MainActivity : AppCompatActivity() {
                 resultCls = findViewById(R.id.result)
                 var startTime = SystemClock.uptimeMillis()
                 val result = transpose?.let { classifier.analyze(it) }
+
                 var endTime = SystemClock.uptimeMillis()
                 inferenceTime = (endTime - startTime).toFloat()
 //                modelInfTime = classifier.getInfTime()
+                var clases: Array<String> = arrayOf("array1", "array2", "array3", "array4", "array5", "array6",
+                                    "array7", "array8", "array9", "array10", "array11")
                 val maxIdx = result.maxOrNull()?.let { it1 -> result.indexOfFirst { it == it1 } }
                 Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
 //                var tt = spectogenerator.getInfTime()
 //                val firstResult = result?.get(0)?.toString()
-//                resultCls.text ="Result: " + firstResult
-//                txtSpeed.text = "Model time: " + modelInfTime.toString() + " Inference: " + inferenceTime.toString() + " ms;   Data gen: " + tt.toString() + " ms"
+                resultCls.text ="Result: " + clases[maxIdx!!] + " | " + result[maxIdx!!]*100.0 +"%"
+                txtSpeed.text =
+                    "Inference time: $inferenceTime ms | Datagen time:   $dataGenTime ms"
 //                prevFileName = fileName
             } else{
                 Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()

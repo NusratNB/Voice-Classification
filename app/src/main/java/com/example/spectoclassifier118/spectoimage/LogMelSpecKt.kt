@@ -35,10 +35,10 @@ class LogMelSpecKt() {
         //for (int j = 0; j < 10; j++) {
         //    System.out.printf("%.10f%n", audioFeatureValues[j]);
         //}
-        val audioFeatureValuesList = jLibrosa.loadAndReadAsList(
-            Path, defaultSampleRate,
-            defaultAudioDuration
-        )
+//        val audioFeatureValuesList = jLibrosa.loadAndReadAsList(
+//            Path, defaultSampleRate,
+//            defaultAudioDuration
+//        )
         // System.out.println(audioFeatureValuesList);
 
         /*

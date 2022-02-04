@@ -1,4 +1,4 @@
-package com.example.mylibrary;
+package com.example.spectoclassifier118.wavreader;
 
 import java.io.File;
 import java.io.FileInputStream;

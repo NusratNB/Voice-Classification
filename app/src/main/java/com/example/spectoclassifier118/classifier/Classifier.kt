@@ -1,26 +1,19 @@
 package com.example.spectoclassifier118.classifier
 
 import android.content.Context
-import android.graphics.Bitmap
-import androidx.annotation.NonNull
+import android.util.Log
 import com.example.spectoclassifier118.ml.TCResNet14SE
-import com.example.spectoclassifier118.viewmodel.Recognition
-import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-//import org.tensorflow.lite.gpu.CompatibilityList
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 
-typealias RecognitionListener = (recognition: List<Recognition>) -> Unit
-private const val MAX_RESULT_DISPLAY = 3
-private const val TAG = "TFL Classify" // Name for logging
-//private lateinit var rotationMatrix: Matrix
-private var width:Int = 224
-private var height:Int = 224
-lateinit var tfImagefromBitmap: TensorImage
+
 var inferenceTime: Float = 0.0f
+var numFrames: Int = 0
+const val inputAudioLength: Int = 16240 // 1.015 seconds
+const val nFFT: Int = 160// 400 // 24 milliseconds
 
 class Classifier(ctx: Context) {
 
@@ -42,91 +35,109 @@ class Classifier(ctx: Context) {
 //        // Initialize the Flower Model
 //        EfficientB0.newInstance(ctx, options)
 //    }
-    fun analyze(data: Array<FloatArray>): FloatArray {
+    fun analyze(data: FloatArray): FloatArray {
 
-        val items = mutableListOf<Recognition>()
-//
-//         var imageProcessor = ImageProcessor.Builder()
-//             .add(NormalizeOp(127.5f, 127.5f))
-//             .build()
-
-
-//         val resBtm: Bitmap = Bitmap.createScaledBitmap(
-//             bitmap,
-//             224,
-//             224,
-//             true
-//         )
-//        var startTime = System.currentTimeMillis()
-
-//         val newbtm = AlphaToBlack(resBtm)
-//    var endTime = System.currentTimeMillis()
-//    inferenceTime = (endTime - startTime).toFloat()
-
-        // TODO 2: Convert Image to Bitmap then to TensorImage
-//         tfImagefromBitmap = TensorImage.fromBitmap(resBtm)
-//         val tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
-//
-//         val normalized = imageProcessor.process(tfImage);
-
-//         val byteBuffer = normalized.tensorBuffer.buffer
-
-
-        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * data.size * data[0].size*1)
-        byteBuffer.order(ByteOrder.nativeOrder())
-        val index = 0
-        for (i in 0..data.size-1) {
-            for (j in 0..data[0].size-1) {
-                byteBuffer.putFloat(data[i][j])
+        val slicedData = handleAudioLength(data)
+        lateinit var probability: TensorBuffer
+        var startTime = System.currentTimeMillis()
+        for (i in 0 until numFrames){
+            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength )
+            byteBuffer.order(ByteOrder.nativeOrder())
+//            for (i in slicedData.indices) {
+            for (j in slicedData[i].indices){
+                byteBuffer.putFloat(slicedData[i][j])
             }
+//            }
+
+            val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, inputAudioLength), DataType.FLOAT32)
+            audioClip.loadBuffer(byteBuffer)
+
+            var outputs = model.process(audioClip)
+
+            probability = outputs.probabilityAsTensorBuffer
+            for (k in probability.floatArray.indices){
+                Log.d("Model's Output + $k", probability.floatArray[k].toString())
+            }
+
         }
 
-        val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, 101, 40), DataType.FLOAT32)
-//         val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
-        audioClip.loadBuffer(byteBuffer)
-//         inputFeature0.loadBuffer(byteBuffer)
-
-
-//         tfImagefromBitmap = imageProcessor.process(tfImagefromBitmap)
-
-//        var tfImage: TensorImage = TensorImage.createFrom(tfImagefromBitmap, DataType.FLOAT32)
-//         Log.(tfImage, "tf image");
-        var startTime = System.currentTimeMillis()
-        var outputs = model.process(audioClip)
-//         var outputs = model.process(inputFeature0)
-        var endTime = System.currentTimeMillis()
-        inferenceTime = (endTime - startTime).toFloat()
-
-
-//         val outputFeature0 = outputs.outputFeature0AsTensorBuffer
-//         val probability = outputs.probabilityAsCategoryList.apply {
-//                sortByDescending { it.score } // Sort with highest confidence first
-//            }.take(MAX_RESULT_DISPLAY) // take the top results
-        val probability = outputs.probabilityAsTensorBuffer
-        //
-//
-//        for (output in probability) {
-//            items.add(Recognition(output.label, output.score))
+//        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
+//        byteBuffer.order(ByteOrder.nativeOrder())
+//        for (i in slicedData.indices) {
+//            for (j in slicedData[i].indices){
+//                byteBuffer.putFloat(slicedData[i][j])
+//            }
 //        }
-//         model.close()
-//        val res = probability.dataType.toString()
+//        val audioClip = TensorBuffer.createFixedSize(intArrayOf(numFrames, inputAudioLength), DataType.FLOAT32)
+//        audioClip.loadBuffer(byteBuffer)
+//
+//        val outputs = model.process(audioClip)
+//        probability = outputs.probabilityAsTensorBuffer
+
+
+        val endTime = System.currentTimeMillis()
+        inferenceTime = (endTime - startTime).toFloat()
+        numFrames = 0
+//        model.close()
+
+
+//        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * inputAudioLength )
+
         return probability.floatArray
 
     }
-    fun getInfTime(): Float {
-        return inferenceTime
-    }
 
 
-    fun AlphaToBlack(image: Bitmap): Bitmap? {
-        val rgbImage = image.copy(Bitmap.Config.ARGB_8888, true)
-        for (y in 0 until rgbImage.height) {
-            for (x in 0 until rgbImage.width) {
-                val aPixel = rgbImage.getPixel(x, y)
-                if (rgbImage.getPixel(x, y) < -0x1000000) rgbImage.setPixel(x, y, -0x1000000)
+    private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
+        val resultData = null
+        lateinit var resultArray: FloatArray
+        lateinit var slicedData: Array<FloatArray>
+        val currentAudioLength = data.size
+        if (currentAudioLength> inputAudioLength){
+            numFrames = (currentAudioLength - inputAudioLength) / nFFT
+            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+            Log.d("Size of currentAudio", currentAudioLength.toString())
+            Log.d("This is size slicedData", slicedData.size.toString())
+            Log.d("This is size slicedData", slicedData[0].size.toString())
+            for (i in 0 until (numFrames)){
+                slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
+            }
+        }else if (currentAudioLength == inputAudioLength){
+            numFrames = 1
+            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+            Log.d("Size of currentAudio", currentAudioLength.toString())
+            Log.d("This is size slicedData", slicedData.size.toString())
+            Log.d("This is size slicedData", slicedData[0].size.toString())
+            for (i in 0 until (numFrames)){
+                slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
+            }
+        } else{
+            numFrames = 1
+            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+            Log.d("Size of currentAudio", currentAudioLength.toString())
+            Log.d("This is size slicedData", slicedData.size.toString())
+            Log.d("This is size slicedData", slicedData[0].size.toString())
+            val remainedLength = FloatArray(inputAudioLength-currentAudioLength){0.0f}
+            for (i in 0 until (numFrames)){
+                slicedData[i] = data + remainedLength
             }
         }
-        return rgbImage
+
+
+
+//        resultArray = when {
+//            currentAudioLength < inputAudioLength -> {
+//                val remainedLength = FloatArray(inputAudioLength-currentAudioLength){0.0f}
+//                data + remainedLength
+//            }
+//            currentAudioLength > inputAudioLength -> {
+//                data.copyOfRange(0, inputAudioLength)
+//            }
+//            else -> {
+//                data
+//            }
+//        }
+        return slicedData
     }
 }
 

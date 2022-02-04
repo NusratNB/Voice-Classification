@@ -1,10 +1,11 @@
 package com.example.spectoclassifier118.spectoimage
 
 import java.io.IOException
-import com.example.mylibrary.FileFormatNotSupportedException
+import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
 import com.example.mylibrary.LogMelSpec
-import com.example.mylibrary.WavFileException
-import com.example.mylibrary.JLibrosa
+//import com.example.mylibrary.WavFileException
+import com.example.spectoclassifier118.wavreader.JLibrosa
+import com.example.spectoclassifier118.wavreader.WavFileException
 
 
 class LogMelSpecKt() {
@@ -19,7 +20,7 @@ class LogMelSpecKt() {
     private val numFFT = 400
 
     @Throws(IOException::class, WavFileException::class, FileFormatNotSupportedException::class)
-    fun main(Path: String): Array<FloatArray> {
+    fun main(Path: String): FloatArray {
         val defaultSampleRate = -1 // -1 value implies the method to use default sample rate
         val defaultAudioDuration = -1 // -1 value implies the method to process complete audio duration
         val jLibrosa = JLibrosa()
@@ -45,16 +46,16 @@ class LogMelSpecKt() {
          * yangqin: To add pre-emphasis to audio librosa.effects.preemphasis(y,
          * coef=config_params.preemphasis_coef) function
          */
-        val audioPreemphasisValue = FloatArray(audioFeatureValues.size)
-        audioPreemphasisValue[0] = audioFeatureValues[0]
+//        val audioPreemphasisValue = FloatArray(audioFeatureValues.size)
+//        audioPreemphasisValue[0] = audioFeatureValues[0]
         //System.out.println(audioPreemphasisValue[0]);
-        for (i in 1 until audioFeatureValues.size) {
-            var pre: Double = audioFeatureValues[i] - audioFeatureValues[i - 1] * 0.96875
-            audioPreemphasisValue[i] = pre.toFloat()
-        }
+//        for (i in 1 until audioFeatureValues.size) {
+//            var pre: Double = audioFeatureValues[i] - audioFeatureValues[i - 1] * 0.96875
+//            audioPreemphasisValue[i] = pre.toFloat()
+//        }
 
 
-        val fixedSizeAudio = handleAudioLength(audioPreemphasisValue)
+//        val fixedSizeAudio = handleAudioLength(audioFeatureValues)
 
         //for (int j = 0; j < 10; j++) {
         //    System.out.printf("%.10f%n", audioPreemphasisValue[j]);
@@ -76,13 +77,13 @@ class LogMelSpecKt() {
         //        System.out.printf("%.10f%n", logmelspec[i][j]);
         //    }
         //}
-        mfcc = jLibrosa.generateMFCCFeatures(fixedSizeAudio, sampleRate, mfccBin, numFFT, numMelBins, hopLength)
-        return minMaxScaling(mfcc)
+//        mfcc = jLibrosa.generateMFCCFeatures(fixedSizeAudio, sampleRate, mfccBin, numFFT, numMelBins, hopLength)
+        return audioFeatureValues
     }
 
 
     private fun handleAudioLength(data: FloatArray): FloatArray {
-        val dataLength = 16000
+        val dataLength = 16240
         lateinit var resultArray: FloatArray
         val currentAudioLength = data.size
         resultArray = if (currentAudioLength < dataLength){
@@ -147,7 +148,7 @@ class LogMelSpecKt() {
 //        return LogMelSpec.audioData
 //    }
 
-    fun getMFCC(path: String): Array<FloatArray> {
+    fun getAudio(path: String): FloatArray {
         innerPaths = path
         return main(innerPaths)
     }

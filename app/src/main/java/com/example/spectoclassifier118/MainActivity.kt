@@ -2,13 +2,10 @@ package com.example.spectoclassifier118
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -25,6 +22,10 @@ import androidx.core.app.ActivityCompat
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
 import com.example.spectoclassifier118.spectoimage.LogMelSpecKt
+import com.example.spectoclassifier118.wavreader.WavFile
+import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
+import com.example.spectoclassifier118.wavreader.WavFileException
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -32,26 +33,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var btnRecord: Button
     lateinit var btnClassification: Button
     lateinit var showBtn: Button
-    private val pickImage=100
-    private var imageUri: Uri? = null
-    private var bitmap: Bitmap? = null
-    private var resBitmap: Bitmap? = null
-    private var trimmedBtm: Bitmap? = null
+    var wavFile: WavFile? = null
+
     private lateinit var classifier: Classifier
     private lateinit var spectogenerator: SpectrogramGenerator
-//    private lateinit var audioRecoder: RecordWavMaster
-    lateinit var audioName: TextView
     lateinit var resultCls: TextView
     lateinit var prevBtn: Button
     lateinit var nextBtn: Button
-    lateinit var wavList: ArrayList<Any?>
-    lateinit var setSpectoName: String
-    var auidoIndex: Int = 0
-    lateinit var pathToFolds: File
-    var imgGenTime: Float = 0.0f
     var dataGenTime: Float = 0.0f
     var inferenceTime: Float = 0.0f
-    var modelInfTime: Float = 0.0f
     lateinit var txtSpeed: TextView
     lateinit var btnPlay: Button
     lateinit var fileName: File
@@ -132,35 +122,33 @@ class MainActivity : AppCompatActivity() {
         btnClassification = findViewById(R.id.classificationButton)
         btnClassification.setOnClickListener{
             if(fileName.exists()){
+
+//                val data = generator.getAudio(fullAudioPath.path)
+
+//                wavFile = WavFile.openWavFile(fullAudioPath);
                 val datagenStartTime = SystemClock.uptimeMillis()
-                val data = generator.getMFCC(fullAudioPath.path)
+                val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
                 val datagenEndTime = SystemClock.uptimeMillis()
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
-                val row = data.size
-                val column = data[0].size
-                val transpose = Array(column) { FloatArray(row) }
-                for (i in 0..row - 1) {
-                    for (j in 0..column - 1) {
-                        transpose[j][i] = data[i][j]
-                    }
-                }
+
+
                 resultCls = findViewById(R.id.result)
                 var startTime = SystemClock.uptimeMillis()
-                val result = transpose?.let { classifier.analyze(it) }
+                val result = audioData?.get(0)?.let { classifier.analyze(it) }
 
                 var endTime = SystemClock.uptimeMillis()
                 inferenceTime = (endTime - startTime).toFloat()
 //                modelInfTime = classifier.getInfTime()
-                var clases: Array<String> = arrayOf("array1", "array2", "array3", "array4", "array5", "array6",
-                                    "array7", "array8", "array9", "array10", "array11")
-                val maxIdx = result.maxOrNull()?.let { it1 -> result.indexOfFirst { it == it1 } }
-                Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
+                var classes: Array<String> = arrayOf("down", "go", "left", "no", "off", "on", "right",
+                                                    "stop", "up", "yes", "open_set")
+                val maxIdx = result?.maxOrNull()?.let { it1 -> result.indexOfFirst { it == it1 } }
+//                Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
 //                var tt = spectogenerator.getInfTime()
 //                val firstResult = result?.get(0)?.toString()
-                resultCls.text ="Result: " + clases[maxIdx!!] + " | " + result[maxIdx!!]*100.0 +"%"
+                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + result[maxIdx]*100.0 +"%"
                 txtSpeed.text =
-                    "Inference time: $inferenceTime ms | Datagen time:   $dataGenTime ms"
-//                prevFileName = fileName
+                    "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
+                prevFileName = fileName
             } else{
                 Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
             }
@@ -233,6 +221,56 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Throws(IOException::class, WavFileException::class, FileFormatNotSupportedException::class)
+    private fun readMagnitudeValuesFromFile(
+        path: String,
+        sampleRate: Int,
+        readDurationInSeconds: Int,
+        offsetDuration: Int
+    ): Array<FloatArray>? {
+        if (!path.endsWith(".wav")) {
+            throw FileFormatNotSupportedException(
+                "File format not supported. jLibrosa currently supports audio processing of only .wav files"
+            )
+        }
+        val sourceFile = File(path)
+        var wavFile: WavFile? = null
+        wavFile = WavFile.openWavFile(sourceFile)
+        var mNumFrames = wavFile.numFrames.toInt()
+        var mSampleRate = wavFile.sampleRate.toInt()
+        val mChannels = wavFile.numChannels
+        val totalNoOfFrames = mNumFrames
+        val frameOffset = offsetDuration * mSampleRate
+        var tobeReadFrames = readDurationInSeconds * mSampleRate
+        if (tobeReadFrames > totalNoOfFrames - frameOffset) {
+            tobeReadFrames = totalNoOfFrames - frameOffset
+        }
+        if (readDurationInSeconds != -1) {
+            mNumFrames = tobeReadFrames
+            wavFile.numFrames = mNumFrames.toLong()
+        }
+//        this.setNoOfChannels(mChannels)
+//        this.setNoOfFrames(mNumFrames)
+//        this.setSampleRate(mSampleRate)
+        if (sampleRate != -1) {
+            mSampleRate = sampleRate
+        }
+
+        // Read the magnitude values across both the channels and save them as part of
+        // multi-dimensional array
+        val buffer = Array(mChannels) {
+            FloatArray(
+                mNumFrames
+            )
+        }
+        var readFrameCount: Long = 0
+        // for (int i = 0; i < loopCounter; i++) {
+        readFrameCount = wavFile.readFrames(buffer, mNumFrames, frameOffset)
+        // }
+        wavFile?.close()
+        return buffer
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String?>,
@@ -273,15 +311,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun resizeBitmap(bmt:Bitmap, width: Int, height: Int):Bitmap{
-
-        return Bitmap.createScaledBitmap(
-            bmt,
-            width,
-            height,
-            true
-        )
-    }
 
 //    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 //        super.onActivityResult(requestCode, resultCode, data)

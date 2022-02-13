@@ -157,8 +157,15 @@ class MainActivity : AppCompatActivity() {
                 if (result != null) {
                     generateCSV(csvFullPath, result)
                 }
+
                 Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
                 val smoothedData = result?.let { it1 -> smoothData(it1) }
+                val smcsvNamePath = fileName.toString().split(".wav")[0] + "Smoothed.csv"
+                val smcsvName = smcsvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
+                val smcsvFullPath = pathToCSVFiles.absolutePath + "/" + smcsvName
+                if (smoothedData != null){
+                    generateCSV(smcsvFullPath, smoothedData)
+                }
 
                 val preResult = result?.get(0)
 
@@ -353,12 +360,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun summation(hSmooth: Int, probs: FloatArray, j: Int): Float {
-        var sums = 0.0f
-//        var probs = probs.copyOfRange(0, j)
-        for(i in hSmooth..j){
-            sums += probs[i]
-        }
-        return sums
+        return probs.copyOfRange(hSmooth, j).sum()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -372,7 +374,6 @@ class MainActivity : AppCompatActivity() {
                 for (element in data){
                     csvPrinter.printRecord(element.asList())
                 }
-//            csvPrinter.printRecord(newAudioData.asList())
                 csvPrinter.flush()
             }
         }

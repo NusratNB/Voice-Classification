@@ -48,7 +48,7 @@ public class RecordWavMaster {
     String fileNameAudio;
 
     private String RECORD_WAV_PATH; //= Environment.getExternalStorageDirectory() + File.separator + "AudioRecord";
-    short threshold=300;
+    short threshold=0;
 
     /* Initializing AudioRecording MIC */
     public RecordWavMaster(Context ctx,  String path) {

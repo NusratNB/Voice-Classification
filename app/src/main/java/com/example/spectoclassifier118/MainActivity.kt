@@ -3,7 +3,6 @@ package com.example.spectoclassifier118
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
@@ -26,6 +25,10 @@ import com.example.spectoclassifier118.wavreader.WavFile
 import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
 import com.example.spectoclassifier118.wavreader.WavFileException
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
 
 
 class MainActivity : AppCompatActivity() {
@@ -49,6 +52,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var fullAudioPath: File
     lateinit var pathToRecords: File
+    lateinit var pathToCSVFiles: File
 
 
     private val requestPermission: ActivityResultLauncher<Array<String>> =
@@ -88,6 +92,14 @@ class MainActivity : AppCompatActivity() {
 //        pathToFolds = File(externalCacheDir?.absoluteFile, "test_500" )
         initClassifierSpectrogramGenerator()
         pathToRecords = File(externalCacheDir?.absoluteFile, "AudioRecord" )
+        pathToCSVFiles = File(externalCacheDir?.absoluteFile, "CSVFiles")
+        if (!pathToCSVFiles.exists()){
+            pathToCSVFiles.mkdir()
+        }
+        if (!pathToRecords.exists()){
+            pathToRecords.mkdir()
+        }
+
         var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
         val generator = LogMelSpecKt()
@@ -112,9 +124,9 @@ class MainActivity : AppCompatActivity() {
                 recording = true
                 fileName = audioRecoder.audioName
                 fullAudioPath = File(fileName.toString()) //File(pathToRecords.toString(), fileName.toString())
-                if (prevFileName.exists()){
-                    prevFileName.delete()
-                }
+//                if (prevFileName.exists()){
+//                    prevFileName.delete()
+//                }
             }
 
         }
@@ -134,18 +146,29 @@ class MainActivity : AppCompatActivity() {
 
                 resultCls = findViewById(R.id.result)
                 var startTime = SystemClock.uptimeMillis()
+
                 val result = audioData?.get(0)?.let { classifier.analyze(it) }
+                val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
+                val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
+                val csvFullPath = pathToCSVFiles.absolutePath + "/" + csvName
+
+                if (result != null) {
+                    generateCSV(csvFullPath, result)
+                }
+                Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
+
+                val preResult = result?.get(0)
 
                 var endTime = SystemClock.uptimeMillis()
                 inferenceTime = (endTime - startTime).toFloat()
 //                modelInfTime = classifier.getInfTime()
                 var classes: Array<String> = arrayOf("down", "go", "left", "no", "off", "on", "right",
                                                     "stop", "up", "yes", "open_set")
-                val maxIdx = result?.maxOrNull()?.let { it1 -> result.indexOfFirst { it == it1 } }
+                val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
 //                Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
 //                var tt = spectogenerator.getInfTime()
 //                val firstResult = result?.get(0)?.toString()
-                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + result[maxIdx]*100.0 +"%"
+                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
                 txtSpeed.text =
                     "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
                 prevFileName = fileName
@@ -282,6 +305,23 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Permission to record audio denied", Toast.LENGTH_LONG).show()
 
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateCSV(path: String, data: Array<FloatArray> ){
+
+        Files.newBufferedWriter(Paths.get(path)).use { writer ->
+            CSVPrinter(
+                writer, CSVFormat.DEFAULT
+
+            ).use { csvPrinter ->
+                for (element in data){
+                    csvPrinter.printRecord(element.asList())
+                }
+//            csvPrinter.printRecord(newAudioData.asList())
+                csvPrinter.flush()
+            }
         }
     }
 

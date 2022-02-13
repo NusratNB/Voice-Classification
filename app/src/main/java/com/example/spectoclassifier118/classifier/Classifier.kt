@@ -13,7 +13,7 @@ import java.nio.ByteOrder
 var inferenceTime: Float = 0.0f
 var numFrames: Int = 0
 const val inputAudioLength: Int = 16240 // 1.015 seconds
-const val nFFT: Int = 160// 400 // 24 milliseconds
+const val nFFT: Int = 400// 400 // 24 milliseconds
 
 class Classifier(ctx: Context) {
 
@@ -35,11 +35,13 @@ class Classifier(ctx: Context) {
 //        // Initialize the Flower Model
 //        EfficientB0.newInstance(ctx, options)
 //    }
-    fun analyze(data: FloatArray): FloatArray {
+    fun analyze(data: FloatArray): Array<FloatArray> {
 
         val slicedData = handleAudioLength(data)
         lateinit var probability: TensorBuffer
         var startTime = System.currentTimeMillis()
+        val finalResult = Array(numFrames){FloatArray(11)}
+
         for (i in 0 until numFrames){
             val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
@@ -58,7 +60,7 @@ class Classifier(ctx: Context) {
             for (k in probability.floatArray.indices){
                 Log.d("Model's Output + $k", probability.floatArray[k].toString())
             }
-
+            finalResult[i] = probability.floatArray
         }
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
@@ -77,13 +79,13 @@ class Classifier(ctx: Context) {
 
         val endTime = System.currentTimeMillis()
         inferenceTime = (endTime - startTime).toFloat()
-        numFrames = 0
+        numFrames = 1
 //        model.close()
 
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * inputAudioLength )
 
-        return probability.floatArray
+        return finalResult
 
     }
 

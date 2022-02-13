@@ -29,6 +29,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import kotlin.math.max
 
 
 class MainActivity : AppCompatActivity() {
@@ -108,7 +109,7 @@ class MainActivity : AppCompatActivity() {
 
 
         txtSpeed = findViewById(R.id.txtSpeed)
-        imageView = findViewById(R.id.imageView)
+//        imageView = findViewById(R.id.imageView)
         btnRecord = findViewById(R.id.btnRecord)
         btnRecord.text = "Start"
         btnRecord.setOnClickListener{
@@ -152,10 +153,12 @@ class MainActivity : AppCompatActivity() {
                 val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
                 val csvFullPath = pathToCSVFiles.absolutePath + "/" + csvName
 
+
                 if (result != null) {
                     generateCSV(csvFullPath, result)
                 }
                 Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
+                val smoothedData = result?.let { it1 -> smoothData(it1) }
 
                 val preResult = result?.get(0)
 
@@ -306,6 +309,56 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Permission to record audio denied", Toast.LENGTH_LONG).show()
 
         }
+    }
+
+    private fun transposeOutput(data: Array<FloatArray>): Array<FloatArray> {
+        val nFrames = data.size
+        val nClasses = data[0].size
+        val transpose = Array(nClasses){FloatArray(nFrames)}
+        for (i in 0 until nFrames){
+            for (j in 0 until nClasses){
+                transpose[j][i] = data[i][j]
+            }
+        }
+        return transpose
+    }
+    private fun smoothData(data: Array<FloatArray>): Array<FloatArray> {
+        val nFrames = data.size
+        val nClasses = data[0].size
+        val transposedData = transposeOutput(data)
+        val wSmooth = 30
+        val wMax = 100
+        val fullSmoothed = Array(nClasses){FloatArray(nFrames)}
+        for(i in transposedData.indices){
+            val classSmoothed = FloatArray(nFrames)
+            var classes: FloatArray = transposedData[i]
+            for (k in classes.indices){
+                if (k>0){
+                    var j = k+1
+                    var probs = classes.copyOfRange(0, j)
+                    val pHat = smoothOutput(j, probs, wMax, wSmooth)
+                    classSmoothed[k] = pHat
+                }
+            }
+            fullSmoothed[i] = classSmoothed
+        }
+        return fullSmoothed
+    }
+
+
+    private fun smoothOutput(j: Int, probs: FloatArray, wMax: Int, wSmooth: Int): Float {
+        val hSmooth = max(1, (j-wSmooth+1))
+        val pHat = (1/(j-hSmooth+1))*summation(hSmooth, probs, j)
+        return pHat
+    }
+
+    private fun summation(hSmooth: Int, probs: FloatArray, j: Int): Float {
+        var sums = 0.0f
+//        var probs = probs.copyOfRange(0, j)
+        for(i in hSmooth..j){
+            sums += probs[i]
+        }
+        return sums
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

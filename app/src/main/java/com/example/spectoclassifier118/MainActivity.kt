@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.spectoclassifier118.classifier.Classifier
 import com.example.spectoclassifier118.spectoimage.SpectrogramGenerator
 import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
@@ -29,6 +30,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import kotlin.math.floor
 import kotlin.math.max
 
 
@@ -54,6 +56,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var fullAudioPath: File
     lateinit var pathToRecords: File
     lateinit var pathToCSVFiles: File
+    lateinit var transpose: Array<FloatArray>
+    lateinit var googlePh: FloatArray
+    lateinit var customPh: FloatArray
+
+    lateinit var customPhTV: TextView
+    lateinit var googlePhTV: TextView
+    lateinit var syntiantPhTV: TextView
+    var nFrames: Int = 1
+
 
 
     private val requestPermission: ActivityResultLauncher<Array<String>> =
@@ -100,6 +111,8 @@ class MainActivity : AppCompatActivity() {
         if (!pathToRecords.exists()){
             pathToRecords.mkdir()
         }
+        val classes: Array<String> = arrayOf("down", "go", "left", "no", "off", "on", "right",
+            "stop", "up", "yes", "open_set")
 
         var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
@@ -135,10 +148,6 @@ class MainActivity : AppCompatActivity() {
         btnClassification = findViewById(R.id.classificationButton)
         btnClassification.setOnClickListener{
             if(fileName.exists()){
-
-//                val data = generator.getAudio(fullAudioPath.path)
-
-//                wavFile = WavFile.openWavFile(fullAudioPath);
                 val datagenStartTime = SystemClock.uptimeMillis()
                 val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
                 val datagenEndTime = SystemClock.uptimeMillis()
@@ -146,7 +155,7 @@ class MainActivity : AppCompatActivity() {
 
 
                 resultCls = findViewById(R.id.result)
-                var startTime = SystemClock.uptimeMillis()
+                val startTime = SystemClock.uptimeMillis()
 
                 val result = audioData?.get(0)?.let { classifier.analyze(it) }
                 val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
@@ -160,24 +169,53 @@ class MainActivity : AppCompatActivity() {
 
                 Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
                 val smoothedData = result?.let { it1 -> smoothData(it1) }
-                val smcsvNamePath = fileName.toString().split(".wav")[0] + "Smoothed.csv"
+                val smcsvNamePath = fileName.toString().split(".wav")[0] + "_Smoothed.csv"
                 val smcsvName = smcsvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
                 val smcsvFullPath = pathToCSVFiles.absolutePath + "/" + smcsvName
                 if (smoothedData != null){
                     generateCSV(smcsvFullPath, smoothedData)
                 }
+                customPh = FloatArray(11)
+                for (i in transpose.indices){
+                    customPh[i] = (transpose[i].average()).toFloat()
+                }
+                val customMaxId =
+                    customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
+                var customClProb = customPh[customMaxId!!]*100.0
+                customClProb = String.format("%.2f", customClProb).toDouble()
+                customPhTV = findViewById(R.id.customPh)
+                customPhTV.text = "CustomPH Result: " + classes[customMaxId!!] + " | " +customClProb + "%"
+
+
+
+                googlePh = FloatArray(11)
+                if (smoothedData != null) {
+                    for (i in smoothedData.indices){
+                        googlePh[i] = (smoothedData[i].average().toFloat())
+                    }
+                }
+                val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
+                var googleClProb = googlePh[googleMaxId!!]*100.0
+                googleClProb = String.format("%.2f", googleClProb).toDouble()
+                googlePhTV = findViewById(R.id.googlePh)
+                googlePhTV.text = "CustomPH Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
+
+                val syntiantPhThresholdV1 = 90.0
+                val syntiantPhThresholdV2 = 80.0
+                val countThV1 = 0
+                val countThV2 = 0
+                val consecutivePh = floor(nFrames*0.5).toInt()
+                
+
+
+
 
                 val preResult = result?.get(0)
 
-                var endTime = SystemClock.uptimeMillis()
+                val endTime = SystemClock.uptimeMillis()
                 inferenceTime = (endTime - startTime).toFloat()
-//                modelInfTime = classifier.getInfTime()
-                var classes: Array<String> = arrayOf("down", "go", "left", "no", "off", "on", "right",
-                                                    "stop", "up", "yes", "open_set")
+
                 val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
-//                Toast.makeText(this, maxIdx.toString(), Toast.LENGTH_LONG).show()
-//                var tt = spectogenerator.getInfTime()
-//                val firstResult = result?.get(0)?.toString()
                 resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
                 txtSpeed.text =
                     "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
@@ -319,43 +357,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun transposeOutput(data: Array<FloatArray>): Array<FloatArray> {
-        val nFrames = data.size
+        nFrames = data.size
         val nClasses = data[0].size
-        val transpose = Array(nClasses){FloatArray(nFrames)}
+        transpose = Array(nClasses){FloatArray(nFrames)}
         for (i in 0 until nFrames){
             for (j in 0 until nClasses){
                 transpose[j][i] = data[i][j]
             }
         }
+
         return transpose
     }
     private fun smoothData(data: Array<FloatArray>): Array<FloatArray> {
-        val nFrames = data.size
+        nFrames = data.size
         val nClasses = data[0].size
         val transposedData = transposeOutput(data)
-        val wSmooth = 30
+        val wSmooth = 10
         val wMax = 100
         val fullSmoothed = Array(nClasses){FloatArray(nFrames)}
         for(i in transposedData.indices){
             val classSmoothed = FloatArray(nFrames)
-            var classes: FloatArray = transposedData[i]
+            val classes: FloatArray = transposedData[i]
             for (k in classes.indices){
-                if (k>0){
-                    var j = k+1
-                    var probs = classes.copyOfRange(0, j)
+                if (k>=0){
+                    val j = k+1
+                    val probs = classes.copyOfRange(0, j)
                     val pHat = smoothOutput(j, probs, wMax, wSmooth)
                     classSmoothed[k] = pHat
                 }
+
             }
             fullSmoothed[i] = classSmoothed
         }
+//        if (fullSmoothed != null) {
+//            for (k in fullSmoothed.indices){
+//                Log.d("Smoothed's Output + $k", fullSmoothed[k].contentToString())
+//            }
+//        }
         return fullSmoothed
     }
 
 
     private fun smoothOutput(j: Int, probs: FloatArray, wMax: Int, wSmooth: Int): Float {
         val hSmooth = max(1, (j-wSmooth+1))
-        val pHat = (1/(j-hSmooth+1))*summation(hSmooth, probs, j)
+        val sum = summation(hSmooth, probs, j)
+        val smoothFactor = (1.0/(j.toFloat()-hSmooth.toFloat()+1.0)).toFloat()
+        val pHat = smoothFactor*sum
+        Log.d("This is pHat", pHat.toString())
+        Log.d("This is hSmooth", hSmooth.toString())
+        Log.d("This is summation", sum.toString())
+        Log.d("This is j ", j.toString())
+        Log.d("This is smoothFactor ", smoothFactor.toString())
         return pHat
     }
 

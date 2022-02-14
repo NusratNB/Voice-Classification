@@ -13,7 +13,7 @@ import java.nio.ByteOrder
 var inferenceTime: Float = 0.0f
 var numFrames: Int = 0
 const val inputAudioLength: Int = 16240 // 1.015 seconds
-const val nFFT: Int = 400// 400 // 24 milliseconds
+const val nFFT: Int = 160// 400 // 24 milliseconds
 
 class Classifier(ctx: Context) {
 
@@ -57,9 +57,9 @@ class Classifier(ctx: Context) {
             var outputs = model.process(audioClip)
 
             probability = outputs.probabilityAsTensorBuffer
-            for (k in probability.floatArray.indices){
-                Log.d("Model's Output + $k", probability.floatArray[k].toString())
-            }
+//            for (k in probability.floatArray.indices){
+//                Log.d("Model's Output + $k", probability.floatArray[k].toString())
+//            }
             finalResult[i] = probability.floatArray
         }
 
@@ -98,9 +98,9 @@ class Classifier(ctx: Context) {
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            Log.d("Size of currentAudio", currentAudioLength.toString())
-            Log.d("This is size slicedData", slicedData.size.toString())
-            Log.d("This is size slicedData", slicedData[0].size.toString())
+//            Log.d("Size of currentAudio", currentAudioLength.toString())
+//            Log.d("This is size slicedData", slicedData.size.toString())
+//            Log.d("This is size slicedData", slicedData[0].size.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }

@@ -198,14 +198,41 @@ class MainActivity : AppCompatActivity() {
                 var googleClProb = googlePh[googleMaxId!!]*100.0
                 googleClProb = String.format("%.2f", googleClProb).toDouble()
                 googlePhTV = findViewById(R.id.googlePh)
-                googlePhTV.text = "CustomPH Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
+                googlePhTV.text = "GooglePH Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
 
                 val syntiantPhThresholdV1 = 90.0
                 val syntiantPhThresholdV2 = 80.0
-                val countThV1 = 0
-                val countThV2 = 0
+                var averageThresholdV1 = 0.0
+                var averageThresholdV2 = 0.0
+                var countThV1 = 0
+                var countThV2 = 0
                 val consecutivePh = floor(nFrames*0.5).toInt()
-                
+                val dominantClass = transpose[customMaxId]
+                for(i in dominantClass.indices){
+                    val currentProb = dominantClass[i]*100.0
+                    Log.d("Dominant class probs: ", currentProb.toString())
+                    if (currentProb>syntiantPhThresholdV1){
+                        countThV1 +=1
+                        averageThresholdV1 += currentProb
+                    }
+                    if (currentProb>syntiantPhThresholdV2){
+                        countThV2 +=1
+                        averageThresholdV2 += currentProb
+                    }
+                }
+                syntiantPhTV = findViewById(R.id.syntiantPh)
+                if (countThV1>=consecutivePh){
+                    averageThresholdV1 /= countThV1 * 100.0
+                    averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
+                    syntiantPhTV.text = "Syntiant Ph num probs above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
+                }
+                if (countThV2>=consecutivePh){
+                    averageThresholdV2 /= countThV2 * 100.0
+                    averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
+                    syntiantPhTV.text = "Syntiant Ph num probs above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
+                }
+
+
 
 
 

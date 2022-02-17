@@ -89,7 +89,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20sp"
-        android:text="audio name"
+        android:text=""
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"

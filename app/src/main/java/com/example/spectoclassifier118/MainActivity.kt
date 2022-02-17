@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
                 var googleClProb = googlePh[googleMaxId!!]*100.0
                 googleClProb = String.format("%.2f", googleClProb).toDouble()
                 googlePhTV = findViewById(R.id.googlePh)
-                googlePhTV.text = "GooglePH Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
+                googlePhTV.text = "GooglePH(Smoothing) Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
 
                 val syntiantPhThresholdV1 = 90.0
                 val syntiantPhThresholdV2 = 80.0
@@ -222,14 +222,16 @@ class MainActivity : AppCompatActivity() {
                 }
                 syntiantPhTV = findViewById(R.id.syntiantPh)
                 if (countThV1>=consecutivePh){
-                    averageThresholdV1 /= countThV1 * 100.0
+                    averageThresholdV1 /= countThV1
                     averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-                    syntiantPhTV.text = "Syntiant Ph num probs above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
+                    syntiantPhTV.text = "SyntiantPh above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
                 }
                 if (countThV2>=consecutivePh){
-                    averageThresholdV2 /= countThV2 * 100.0
+                    averageThresholdV2 /= countThV2
                     averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-                    syntiantPhTV.text = "Syntiant Ph num probs above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
+                    syntiantPhTV.text = "SyntiantPh above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
+                } else{
+                    syntiantPhTV.text = "There is no probs above 80% and 90%"
                 }
 
 
@@ -243,7 +245,8 @@ class MainActivity : AppCompatActivity() {
                 inferenceTime = (endTime - startTime).toFloat()
 
                 val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
-                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
+//                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
+                resultCls.text = "Overall number of frames $nFrames"
                 txtSpeed.text =
                     "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
                 prevFileName = fileName

@@ -7,6 +7,8 @@ import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import org.tensorflow.lite.Interpreter
+
 
 
 
@@ -54,7 +56,7 @@ class Classifier(ctx: Context) {
             val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, inputAudioLength), DataType.FLOAT32)
             audioClip.loadBuffer(byteBuffer)
 
-            var outputs = model.process(audioClip)
+            val outputs = model.process(audioClip)
 
             probability = outputs.probabilityAsTensorBuffer
 //            for (k in probability.floatArray.indices){

@@ -18,7 +18,7 @@ import java.util.*
 
 class ClassifierAlt(ctx: Context, activity: AssetManager){
 
-    private val MODEL_PATH: String = "model_12.tflite"
+    private val MODEL_PATH: String = "modeltfNightly.49.tflite"
     lateinit var testSlicedData: Array<FloatArray>
     var inferenceTime: Float = 0.0f
     var numFrames: Int = 0
@@ -57,20 +57,24 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             outputByteBuffer.order(ByteOrder.nativeOrder())
     //            }
 
-//            val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, inputAudioLength), DataType.FLOAT32)
-//            audioClip.loadBuffer(byteBuffer)
+            val audioClip = TensorBuffer.createFixedSize(intArrayOf(2, 11), DataType.FLOAT32)
+            audioClip.loadBuffer(outputByteBuffer)
 
 
     //            val outputs = model.process(audioClip)
 //            val newShape: IntArray = IntArray([4,16240])
             tfLite?.resizeInput(0, intArrayOf(2, inputAudioLength))
-            outputs = tfLite?.run(byteBuffer, outputByteBuffer)
+            outputs = tfLite?.run(byteBuffer, audioClip.getBuffer())
     //            val buffer = ByteBuffer.wrap(outputs)
     //            for (k in probability.floatArray.indices){
     //                Log.d("Model's Output + $k", probability.floatArray[k].toString())
     //            }
-            Log.d("Outputs ", Arrays.toString(outputByteBuffer))
+            Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())
+        for (k in audioClip.floatArray.indices){
+            val kk = audioClip.floatArray[k]
+            Log.d("audioClip elements $k", kk.toString())
+        }
 
     //            finalResult[i] = outputs
 //        }
@@ -101,7 +105,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
 
     }
 
-    fun handleAudioLength(data: FloatArray): Array<FloatArray> {
+    private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
         val resultData = null
         lateinit var resultArray: FloatArray
         lateinit var slicedData: Array<FloatArray>

@@ -46,7 +46,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         var outputs: Unit? = null
 
 //        for (i in 0 until 4){
-            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(2*4 * inputAudioLength )
+            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(2*4*inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
     //            for (i in slicedData.indices) {
             for (i in 0 until 2) {

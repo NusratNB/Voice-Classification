@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.spectoclassifier118.classifier.Classifier
+import com.example.spectoclassifier118.classifier.ClassifierAlt
 import com.example.spectoclassifier118.spectoimage.SpectrogramGenerator
 import android.os.SystemClock
 import android.util.Log
@@ -34,6 +35,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 
+
 class MainActivity : AppCompatActivity() {
     lateinit var imageView: ImageView
     lateinit var btnRecord: Button
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     var wavFile: WavFile? = null
 
     private lateinit var classifier: Classifier
+    private lateinit var classifierAlt: ClassifierAlt
     private lateinit var spectogenerator: SpectrogramGenerator
     lateinit var resultCls: TextView
     lateinit var prevBtn: Button
@@ -158,9 +161,11 @@ class MainActivity : AppCompatActivity() {
                 val startTime = SystemClock.uptimeMillis()
 
                 val result = audioData?.get(0)?.let { classifier.analyze(it) }
+                val ressAlt = audioData?.get(0)?.let { classifierAlt.makeInference(it) }
                 val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
                 val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
                 val csvFullPath = pathToCSVFiles.absolutePath + "/" + csvName
+                Log.d("This is ressAlt ", ressAlt.toString())
 
 
                 if (result != null) {
@@ -501,6 +506,7 @@ class MainActivity : AppCompatActivity() {
     private fun initClassifierSpectrogramGenerator() {
 
         classifier = Classifier(this)
+        classifierAlt = ClassifierAlt(this, this.assets)
         spectogenerator = SpectrogramGenerator(this)
 //        spectogenerator.initVars(pathToFolds)
 

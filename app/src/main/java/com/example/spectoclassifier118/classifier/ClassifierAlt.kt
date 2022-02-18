@@ -13,14 +13,13 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-
-
-
+import java.util.*
 
 
 class ClassifierAlt(ctx: Context, activity: AssetManager){
 
     private val MODEL_PATH: String = "model_12.tflite"
+    lateinit var testSlicedData: Array<FloatArray>
     var inferenceTime: Float = 0.0f
     var numFrames: Int = 0
     val inputAudioLength: Int = 16240 // 1.015 seconds
@@ -37,37 +36,44 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     }
     private val tfLite: Interpreter? = loadModelFile(activity, MODEL_PATH)?.let { Interpreter(it) }
 
-    fun makeInference(data: FloatArray): Array<FloatArray> {
+    fun makeInference(data: FloatArray): Unit? {
 
         val slicedData = handleAudioLength(data)
         lateinit var probability: TensorBuffer
         var startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(11)}
+        var outputs: Unit? = null
 
-        for (i in 0 until numFrames){
-            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength )
+//        for (i in 0 until 4){
+            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(2*4 * inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
-//            for (i in slicedData.indices) {
-            for (j in slicedData[i].indices){
-                byteBuffer.putFloat(slicedData[i][j])
+    //            for (i in slicedData.indices) {
+            for (i in 0 until 2) {
+                for (j in testSlicedData[i].indices) {
+                    byteBuffer.putFloat(testSlicedData[i][j])
+                }
             }
-            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4*11)
-//            }
+            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(2*4*11)
+            outputByteBuffer.order(ByteOrder.nativeOrder())
+    //            }
 
-            val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, inputAudioLength), DataType.FLOAT32)
-            audioClip.loadBuffer(byteBuffer)
+//            val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, inputAudioLength), DataType.FLOAT32)
+//            audioClip.loadBuffer(byteBuffer)
 
 
-//            val outputs = model.process(audioClip)
-            val outputs = tfLite?.run(byteBuffer, outputByteBuffer)
-//            val buffer = ByteBuffer.wrap(outputs)
-//            for (k in probability.floatArray.indices){
-//                Log.d("Model's Output + $k", probability.floatArray[k].toString())
-//            }
-            Log.e("Outputs", outputs.toString())
+    //            val outputs = model.process(audioClip)
+//            val newShape: IntArray = IntArray([4,16240])
+            tfLite?.resizeInput(0, intArrayOf(2, inputAudioLength))
+            outputs = tfLite?.run(byteBuffer, outputByteBuffer)
+    //            val buffer = ByteBuffer.wrap(outputs)
+    //            for (k in probability.floatArray.indices){
+    //                Log.d("Model's Output + $k", probability.floatArray[k].toString())
+    //            }
+            Log.d("Outputs ", Arrays.toString(outputByteBuffer))
+            Log.d("sliced data size", slicedData.size.toString())
 
-//            finalResult[i] = outputs
-        }
+    //            finalResult[i] = outputs
+//        }
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
 //        byteBuffer.order(ByteOrder.nativeOrder())
@@ -91,27 +97,33 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * inputAudioLength )
 
-        return finalResult
+        return outputs
 
     }
 
-    private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
+    fun handleAudioLength(data: FloatArray): Array<FloatArray> {
         val resultData = null
         lateinit var resultArray: FloatArray
         lateinit var slicedData: Array<FloatArray>
+
         val currentAudioLength = data.size
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+            testSlicedData = Array(2){ FloatArray(inputAudioLength) }
 //            Log.d("Size of currentAudio", currentAudioLength.toString())
 //            Log.d("This is size slicedData", slicedData.size.toString())
 //            Log.d("This is size slicedData", slicedData[0].size.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
+            testSlicedData[0] = slicedData[0]
+            testSlicedData[1] = slicedData[1]
+
         }else if (currentAudioLength == inputAudioLength){
             numFrames = 1
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+
             Log.d("Size of currentAudio", currentAudioLength.toString())
             Log.d("This is size slicedData", slicedData.size.toString())
             Log.d("This is size slicedData", slicedData[0].size.toString())

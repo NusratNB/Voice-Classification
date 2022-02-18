@@ -100,27 +100,18 @@ class Classifier(ctx: Context) {
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-//            Log.d("Size of currentAudio", currentAudioLength.toString())
-//            Log.d("This is size slicedData", slicedData.size.toString())
-//            Log.d("This is size slicedData", slicedData[0].size.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
         }else if (currentAudioLength == inputAudioLength){
             numFrames = 1
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            Log.d("Size of currentAudio", currentAudioLength.toString())
-            Log.d("This is size slicedData", slicedData.size.toString())
-            Log.d("This is size slicedData", slicedData[0].size.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
         } else{
             numFrames = 1
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            Log.d("Size of currentAudio", currentAudioLength.toString())
-            Log.d("This is size slicedData", slicedData.size.toString())
-            Log.d("This is size slicedData", slicedData[0].size.toString())
             val remainedLength = FloatArray(inputAudioLength-currentAudioLength){0.0f}
             for (i in 0 until (numFrames)){
                 slicedData[i] = data + remainedLength

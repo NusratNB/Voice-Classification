@@ -238,12 +238,6 @@ class MainActivity : AppCompatActivity() {
                 } else{
                     syntiantPhTV.text = "There is no probs above 80% and 90%"
                 }
-
-
-
-
-
-
                 val preResult = result?.get(0)
 
                 val endTime = SystemClock.uptimeMillis()

@@ -57,7 +57,6 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(2*4*11)
             outputByteBuffer.order(ByteOrder.nativeOrder())
     //            }
-
             val audioClip = TensorBuffer.createFixedSize(intArrayOf(2, 11), DataType.FLOAT32)
             audioClip.loadBuffer(outputByteBuffer)
             val inputData = TensorBuffer.createFixedSize(intArrayOf(2, inputAudioLength), DataType.FLOAT32)

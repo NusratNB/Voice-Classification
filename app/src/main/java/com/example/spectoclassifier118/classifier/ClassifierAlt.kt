@@ -24,6 +24,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     var numFrames: Int = 0
     val inputAudioLength: Int = 16240 // 1.015 seconds
     val nFFT: Int = 160// 400 // 24 milliseconds
+    val nBatchSize: Int =1
 
     @Throws(IOException::class)
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {
@@ -59,12 +60,14 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
 
             val audioClip = TensorBuffer.createFixedSize(intArrayOf(2, 11), DataType.FLOAT32)
             audioClip.loadBuffer(outputByteBuffer)
+            val inputData = TensorBuffer.createFixedSize(intArrayOf(2, inputAudioLength), DataType.FLOAT32)
+            inputData.loadBuffer(byteBuffer)
 
 
     //            val outputs = model.process(audioClip)
 //            val newShape: IntArray = IntArray([4,16240])
             tfLite?.resizeInput(0, intArrayOf(2, inputAudioLength))
-            outputs = tfLite?.run(byteBuffer, audioClip.getBuffer())
+            outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
     //            val buffer = ByteBuffer.wrap(outputs)
     //            for (k in probability.floatArray.indices){
     //                Log.d("Model's Output + $k", probability.floatArray[k].toString())

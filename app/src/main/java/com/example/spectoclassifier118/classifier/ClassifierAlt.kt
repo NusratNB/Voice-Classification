@@ -25,6 +25,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     val inputAudioLength: Int = 16240 // 1.015 seconds
     val nFFT: Int = 160// 400 // 24 milliseconds
     val nBatchSize: Int =4
+    var nPredictions: Int = 1
 
     @Throws(IOException::class)
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {
@@ -39,6 +40,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
 
     fun makeInference(data: FloatArray): Unit? {
 
+        nPredictions = numFrames/nBatchSize
         val slicedData = handleAudioLength(data)
         lateinit var probability: TensorBuffer
         var startTime = System.currentTimeMillis()
@@ -110,6 +112,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         lateinit var slicedData: Array<FloatArray>
 
         val currentAudioLength = data.size
+
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}

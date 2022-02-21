@@ -1,7 +1,6 @@
 package com.example.spectoclassifier118.classifier
 
 import android.content.Context
-import android.util.Log
 import com.example.spectoclassifier118.ml.TCResNet14SE
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -44,7 +43,7 @@ class Classifier(ctx: Context) {
         var startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(11)}
 
-        for (i in 0 until 1){
+        for (i in 0 until numFrames){
             val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
 //            for (i in slicedData.indices) {

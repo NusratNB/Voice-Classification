@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -22,35 +21,25 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
-import com.example.spectoclassifier118.spectoimage.LogMelSpecKt
 import com.example.spectoclassifier118.wavreader.WavFile
 import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
 import com.example.spectoclassifier118.wavreader.WavFileException
 import com.example.spectoclassifier118.utils.GenerateCSV
 import com.example.spectoclassifier118.utils.SmoothOutput
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
 import kotlin.math.floor
-import kotlin.math.max
-
 
 
 class MainActivity : AppCompatActivity() {
-    lateinit var imageView: ImageView
+
     lateinit var btnRecord: Button
     lateinit var btnClassification: Button
     lateinit var showBtn: Button
-    var wavFile: WavFile? = null
 
     private lateinit var classifier: Classifier
     private lateinit var classifierAlt: ClassifierAlt
     private lateinit var spectogenerator: SpectrogramGenerator
     lateinit var resultCls: TextView
-    lateinit var prevBtn: Button
-    lateinit var nextBtn: Button
     var dataGenTime: Float = 0.0f
     var inferenceTime: Float = 0.0f
     lateinit var txtSpeed: TextView
@@ -85,12 +74,6 @@ class MainActivity : AppCompatActivity() {
                 if (isGranted){
                     Toast.makeText(this@MainActivity, "Permission is granted",
                         Toast.LENGTH_SHORT).show()
-
-//                    val pickIntent = Intent(
-//                        Intent.ACTION_PICK,
-//                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-
-//                    openGalleryLauncher.launch(pickIntent)
                 }else{
                     if (permissionName== Manifest.permission.READ_EXTERNAL_STORAGE){
                         Toast.makeText(this@MainActivity, "Storage reading denied",
@@ -109,7 +92,6 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO),200);
             requestStoragePermission()
         }
-//        pathToFolds = File(externalCacheDir?.absoluteFile, "test_500" )
         initClassifierSpectrogramGenerator()
         pathToRecords = File(externalCacheDir?.absoluteFile, "AudioRecord" )
         pathToCSVFiles = File(externalCacheDir?.absoluteFile, "CSVFiles")
@@ -124,13 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
-        val generator = LogMelSpecKt()
-
-
-
-
         txtSpeed = findViewById(R.id.txtSpeed)
-//        imageView = findViewById(R.id.imageView)
         btnRecord = findViewById(R.id.btnRecord)
         btnRecord.text = "Start"
         btnRecord.setOnClickListener{
@@ -160,18 +136,13 @@ class MainActivity : AppCompatActivity() {
                 val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
                 val datagenEndTime = SystemClock.uptimeMillis()
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
-
-
                 resultCls = findViewById(R.id.result)
                 val startTime = SystemClock.uptimeMillis()
-
                 result = audioData?.get(0)?.let { classifier.analyze(it) }!!
-                val ressAlt = audioData?.get(0)?.let { classifierAlt.makeInference(it) }
+                nFrames = result.size
                 val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
                 val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
                 val csvFullPath = pathToCSVFiles.absolutePath + "/" + csvName
-                Log.d("This is ressAlt ", ressAlt.toString())
-
 
                 if (result != null) {
                     genCSV.generateCSV(csvFullPath, result)
@@ -185,7 +156,8 @@ class MainActivity : AppCompatActivity() {
                 if (smoothedData != null){
                     genCSV.generateCSV(smcsvFullPath, smoothedData)
                 }
-                transpose = so.transpose
+                so = SmoothOutput(result.size)
+                transpose = so.transposeOutput(result.size, result)
                 customPh = FloatArray(11)
                 for (i in transpose.indices){
                     customPh[i] = (transpose[i].average()).toFloat()
@@ -371,47 +343,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-        nextBtn = findViewById(R.id.next)
-        nextBtn.setOnClickListener{
-            Toast.makeText(this, "Not working", Toast.LENGTH_SHORT).show()
-
-//            if (wavList.size>=0 && auidoIndex<=wavList.size){
-//                auidoIndex += 1
-//
-//                if (auidoIndex >= wavList.size){
-//                    Toast.makeText(this, "This is end of the list", Toast.LENGTH_SHORT).show()
-//                    setSpectoName = spectogenerator.setFilename(wavList[wavList.size - 1] as String).toString()
-//                    audioName.text ="Audio name: " + wavList[wavList.size - 1] as String
-//                    auidoIndex = wavList.size-1
-//                } else{
-//
-//                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
-//                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
-//
-//                }
-//
-//            }
-        }
-        prevBtn = findViewById(R.id.previous)
-        prevBtn.setOnClickListener{
-            Toast.makeText(this, "Not working", Toast.LENGTH_SHORT).show()
-//            if (auidoIndex>=0 && wavList.size>0){
-//                auidoIndex -=1
-//
-//                if (auidoIndex <= 0){
-//                    Toast.makeText(this, "This is beginning of the list", Toast.LENGTH_SHORT).show()
-//                    setSpectoName = spectogenerator.setFilename(wavList[0] as String).toString()
-//                    audioName.text ="Audio name: " + wavList[0] as String
-//                    auidoIndex = 0
-//                }else{
-//
-//                    setSpectoName = spectogenerator.setFilename(wavList[auidoIndex] as String).toString()
-//                    audioName.text ="Audio name: " + wavList[auidoIndex] as String
-//
-//                }
-//
-//            }
-        }
     }
 
     @Throws(IOException::class, WavFileException::class, FileFormatNotSupportedException::class)
@@ -442,9 +373,6 @@ class MainActivity : AppCompatActivity() {
             mNumFrames = tobeReadFrames
             wavFile.numFrames = mNumFrames.toLong()
         }
-//        this.setNoOfChannels(mChannels)
-//        this.setNoOfFrames(mNumFrames)
-//        this.setSampleRate(mSampleRate)
         if (sampleRate != -1) {
             mSampleRate = sampleRate
         }
@@ -505,7 +433,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initClassifierSpectrogramGenerator() {
-        so = SmoothOutput()
+        so = SmoothOutput(nFrames)
         genCSV = GenerateCSV()
         classifier = Classifier (this)
         classifierAlt = ClassifierAlt(this, this.assets)

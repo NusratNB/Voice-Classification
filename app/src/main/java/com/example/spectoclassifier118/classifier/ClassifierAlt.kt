@@ -46,8 +46,14 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         var startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(11)}
         var outputs: Unit? = null
+        val batchedData = Array(nPredictions){Array(11){FloatArray(inputAudioLength)} }
 
-//        for (i in 0 until 4){
+        for (i in 0 until nPredictions-1){
+            batchedData[i] = slicedData.slice(i*nPredictions until (i+1)*nPredictions).toTypedArray()
+        }
+
+        for (s in 0 until nPredictions){
+            testSlicedData = batchedData[s] //Array(nBatchSize){ FloatArray(inputAudioLength) }
             val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(nBatchSize*4*inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
     //            for (i in slicedData.indices) {
@@ -81,7 +87,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         }
 
     //            finalResult[i] = outputs
-//        }
+        }
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
 //        byteBuffer.order(ByteOrder.nativeOrder())
@@ -116,14 +122,9 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            testSlicedData = Array(nBatchSize){ FloatArray(inputAudioLength) }
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
-            for(j in 0 until nBatchSize){
-                testSlicedData[j] = slicedData[j]
-            }
-
 
         }else if (currentAudioLength == inputAudioLength){
             numFrames = 1

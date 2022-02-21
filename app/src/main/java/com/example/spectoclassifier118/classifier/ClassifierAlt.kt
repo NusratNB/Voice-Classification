@@ -1,5 +1,6 @@
 package com.example.spectoclassifier118.classifier
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
@@ -13,7 +14,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-import java.util.*
 
 
 class ClassifierAlt(ctx: Context, activity: AssetManager){
@@ -38,10 +38,13 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     }
     private val tfLite: Interpreter? = loadModelFile(activity, MODEL_PATH)?.let { Interpreter(it) }
 
+    @SuppressLint("LongLogTag")
     fun makeInference(data: FloatArray): Unit? {
-
-        nPredictions = numFrames/nBatchSize
         val slicedData = handleAudioLength(data)
+        nPredictions = numFrames/nBatchSize
+        Log.d("batchedData nPredictions", nPredictions.toString())
+        Log.d("batchedData numFrames", numFrames.toString())
+
         lateinit var probability: TensorBuffer
         var startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(11)}
@@ -49,8 +52,9 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         val batchedData = Array(nPredictions){Array(11){FloatArray(inputAudioLength)} }
 
         for (i in 0 until nPredictions-1){
-            batchedData[i] = slicedData.slice(i*nPredictions until (i+1)*nPredictions).toTypedArray()
+            batchedData[i] = slicedData.slice(i*nBatchSize until (i+1)*nBatchSize).toTypedArray()
         }
+        val batchedOutput = Array(nPredictions){Array(nBatchSize){FloatArray(11)} }
 
         for (s in 0 until nPredictions){
             testSlicedData = batchedData[s] //Array(nBatchSize){ FloatArray(inputAudioLength) }
@@ -74,11 +78,18 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
             Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())
+            val sliceOutput = Array(nBatchSize){FloatArray(11)}
+            for(i in 0 until nBatchSize-1) {
+                sliceOutput[i] =
+                    audioClip.floatArray.slice(i * 11 until (i + 1) * 11).toFloatArray()
+            }
+            batchedOutput[s] = sliceOutput
         for (k in audioClip.floatArray.indices){
             val kk = audioClip.floatArray[k]
             Log.d("audioClip elements $k", kk.toString())
         }
         }
+        
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
 //        byteBuffer.order(ByteOrder.nativeOrder())
@@ -104,8 +115,6 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     }
 
     private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
-        val resultData = null
-        lateinit var resultArray: FloatArray
         lateinit var slicedData: Array<FloatArray>
 
         val currentAudioLength = data.size
@@ -113,6 +122,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
+            Log.d("handleAudio: numFrames", numFrames.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }

@@ -44,7 +44,7 @@ class Classifier(ctx: Context) {
         var startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(11)}
 
-        for (i in 0 until numFrames){
+        for (i in 0 until 1){
             val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
 //            for (i in slicedData.indices) {

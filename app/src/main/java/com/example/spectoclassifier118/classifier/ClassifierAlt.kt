@@ -24,7 +24,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     var numFrames: Int = 0
     val inputAudioLength: Int = 16240 // 1.015 seconds
     val nFFT: Int = 160// 400 // 24 milliseconds
-    val nBatchSize: Int =1
+    val nBatchSize: Int =4
 
     @Throws(IOException::class)
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {
@@ -46,26 +46,26 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         var outputs: Unit? = null
 
 //        for (i in 0 until 4){
-            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(2*4*inputAudioLength )
+            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(nBatchSize*4*inputAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
     //            for (i in slicedData.indices) {
-            for (i in 0 until 2) {
+            for (i in 0 until nBatchSize) {
                 for (j in testSlicedData[i].indices) {
                     byteBuffer.putFloat(testSlicedData[i][j])
                 }
             }
-            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(2*4*11)
+            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(nBatchSize*4*11)
             outputByteBuffer.order(ByteOrder.nativeOrder())
     //            }
-            val audioClip = TensorBuffer.createFixedSize(intArrayOf(2, 11), DataType.FLOAT32)
+            val audioClip = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, 11), DataType.FLOAT32)
             audioClip.loadBuffer(outputByteBuffer)
-            val inputData = TensorBuffer.createFixedSize(intArrayOf(2, inputAudioLength), DataType.FLOAT32)
+            val inputData = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, inputAudioLength), DataType.FLOAT32)
             inputData.loadBuffer(byteBuffer)
 
 
     //            val outputs = model.process(audioClip)
 //            val newShape: IntArray = IntArray([4,16240])
-            tfLite?.resizeInput(0, intArrayOf(2, inputAudioLength))
+            tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
     //            val buffer = ByteBuffer.wrap(outputs)
     //            for (k in probability.floatArray.indices){
@@ -113,12 +113,14 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         if (currentAudioLength> inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            testSlicedData = Array(2){ FloatArray(inputAudioLength) }
+            testSlicedData = Array(nBatchSize){ FloatArray(inputAudioLength) }
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
-            testSlicedData[0] = slicedData[0]
-            testSlicedData[1] = slicedData[1]
+            for(j in 0 until nBatchSize){
+                testSlicedData[j] = slicedData[j]
+            }
+
 
         }else if (currentAudioLength == inputAudioLength){
             numFrames = 1

@@ -70,23 +70,14 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             val inputData = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, inputAudioLength), DataType.FLOAT32)
             inputData.loadBuffer(byteBuffer)
 
-
-    //            val outputs = model.process(audioClip)
-//            val newShape: IntArray = IntArray([4,16240])
             tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
-    //            val buffer = ByteBuffer.wrap(outputs)
-    //            for (k in probability.floatArray.indices){
-    //                Log.d("Model's Output + $k", probability.floatArray[k].toString())
-    //            }
             Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())
         for (k in audioClip.floatArray.indices){
             val kk = audioClip.floatArray[k]
             Log.d("audioClip elements $k", kk.toString())
         }
-
-    //            finalResult[i] = outputs
         }
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )

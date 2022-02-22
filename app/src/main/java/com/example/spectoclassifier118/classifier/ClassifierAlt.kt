@@ -39,7 +39,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     private val tfLite: Interpreter? = loadModelFile(activity, MODEL_PATH)?.let { Interpreter(it) }
 
     @SuppressLint("LongLogTag")
-    fun makeInference(data: FloatArray): Unit? {
+    fun makeInference(data: FloatArray): Array<FloatArray> {
         val slicedData = handleAudioLength(data)
         nPredictions = numFrames/nBatchSize
         Log.d("batchedData nPredictions", nPredictions.toString())
@@ -98,9 +98,9 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         var ddd = 0
         for (i in 0 until nPredictions){
             for (j in 0 until nBatchSize){
-                fullOut[indOut]=batchedData[i][j]
+                fullOut[indOut]=batchedOutput[i][j]
                 for (k in 0 until 11){
-                    Log.d("batchedDataa $ddd", batchedData[i][j][k].toString())
+                    Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
                     ddd += 1
                 }
 
@@ -134,7 +134,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         numFrames = 1
 //        model.close()
 
-        return outputs
+        return fullOut
 
     }
 

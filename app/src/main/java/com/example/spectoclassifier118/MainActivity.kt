@@ -259,84 +259,88 @@ class MainActivity : AppCompatActivity() {
 //            if (result != null) {
 //                generateCSV(csvFullPath, result)
 //            }
-
+//
 //            Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
-//            val smoothedData = result?.let { it1 -> smoothData(it1) }
-//            val smcsvNamePath = fileName.toString().split(".wav")[0] + "_Smoothed.csv"
-//            val smcsvName = smcsvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
-//            val smcsvFullPath = pathToCSVFiles.absolutePath + "/" + smcsvName
-//            if (smoothedData != null){
-//                generateCSV(smcsvFullPath, smoothedData)
-//            }
-//            customPh = FloatArray(11)
-//            for (i in transpose.indices){
-//                customPh[i] = (transpose[i].average()).toFloat()
-//            }
-//            val customMaxId =
-//                customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
-//            var customClProb = customPh[customMaxId!!]*100.0
-//            customClProb = String.format("%.2f", customClProb).toDouble()
-//            customPhTV = findViewById(R.id.customPh)
-//            customPhTV.text = "CustomPH Result: " + classes[customMaxId!!] + " | " +customClProb + "%"
+                val smoothedData = ressAlt?.let { it1 -> so.smoothData(it1) }
+                val smcsvNamePath = fileName.toString().split(".wav")[0] + "_Smoothed.csv"
+                val smcsvName = smcsvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
+                val smcsvFullPath = pathToCSVFiles.absolutePath + "/" + smcsvName
+                if (smoothedData != null){
+                    genCSV.generateCSV(smcsvFullPath, smoothedData)
+                }
+                if (ressAlt != null) {
+                    so = SmoothOutput(ressAlt.size)
+                }
+                if (ressAlt != null) {
+                    transpose = so.transposeOutput(ressAlt.size, ressAlt)
+                }
+                customPh = FloatArray(11)
+                for (i in transpose.indices){
+                    customPh[i] = (transpose[i].average()).toFloat()
+                }
+                val customMaxId =
+                    customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
+                var customClProb = customPh[customMaxId!!]*100.0
+                customClProb = String.format("%.2f", customClProb).toDouble()
+                customPhTV = findViewById(R.id.customPh)
+                customPhTV.text = "CustomPH Result: " + classes[customMaxId!!] + " | " +customClProb + "%"
 
+                googlePh = FloatArray(11)
+                if (smoothedData != null) {
+                    for (i in smoothedData.indices){
+                        googlePh[i] = (smoothedData[i].average().toFloat())
+                    }
+                }
+                val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
+                var googleClProb = googlePh[googleMaxId!!]*100.0
+                googleClProb = String.format("%.2f", googleClProb).toDouble()
+                googlePhTV = findViewById(R.id.googlePh)
+                googlePhTV.text = "GooglePH(Smoothing) Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
 
+                val syntiantPhThresholdV1 = 90.0
+                val syntiantPhThresholdV2 = 80.0
+                var averageThresholdV1 = 0.0
+                var averageThresholdV2 = 0.0
+                var countThV1 = 0
+                var countThV2 = 0
+                val consecutivePh = floor(nFrames*0.5).toInt()
+                val dominantClass = transpose[customMaxId]
+                for(i in dominantClass.indices){
+                    val currentProb = dominantClass[i]*100.0
+                    Log.d("Dominant class probs: ", currentProb.toString())
+                    if (currentProb>syntiantPhThresholdV1){
+                        countThV1 +=1
+                        averageThresholdV1 += currentProb
+                    }
+                    if (currentProb>syntiantPhThresholdV2){
+                        countThV2 +=1
+                        averageThresholdV2 += currentProb
+                    }
+                }
+                syntiantPhTV = findViewById(R.id.syntiantPh)
+                if (countThV1>=consecutivePh){
+                    averageThresholdV1 /= countThV1
+                    averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
+                    syntiantPhTV.text = "SyntiantPh above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
+                }
+                if (countThV2>=consecutivePh){
+                    averageThresholdV2 /= countThV2
+                    averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
+                    syntiantPhTV.text = "SyntiantPh above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
+                } else{
+                    syntiantPhTV.text = "There is no probs above 80% and 90%"
+                }
+                val preResult = ressAlt?.get(0)
 
-//            googlePh = FloatArray(11)
-//            if (smoothedData != null) {
-//                for (i in smoothedData.indices){
-//                    googlePh[i] = (smoothedData[i].average().toFloat())
-//                }
-//            }
-//            val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
-//            var googleClProb = googlePh[googleMaxId!!]*100.0
-//            googleClProb = String.format("%.2f", googleClProb).toDouble()
-//            googlePhTV = findViewById(R.id.googlePh)
-//            googlePhTV.text = "GooglePH(Smoothing) Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
+                val endTime = SystemClock.uptimeMillis()
+                inferenceTime = (endTime - startTime).toFloat()
 
-//            val syntiantPhThresholdV1 = 90.0
-//            val syntiantPhThresholdV2 = 80.0
-//            var averageThresholdV1 = 0.0
-//            var averageThresholdV2 = 0.0
-//            var countThV1 = 0
-//            var countThV2 = 0
-//            val consecutivePh = floor(nFrames*0.5).toInt()
-//            val dominantClass = transpose[customMaxId]
-//            for(i in dominantClass.indices){
-//                val currentProb = dominantClass[i]*100.0
-//                Log.d("Dominant class probs: ", currentProb.toString())
-//                if (currentProb>syntiantPhThresholdV1){
-//                    countThV1 +=1
-//                    averageThresholdV1 += currentProb
-//                }
-//                if (currentProb>syntiantPhThresholdV2){
-//                    countThV2 +=1
-//                    averageThresholdV2 += currentProb
-//                }
-//            }
-//            syntiantPhTV = findViewById(R.id.syntiantPh)
-//            if (countThV1>=consecutivePh){
-//                averageThresholdV1 /= countThV1
-//                averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-//                syntiantPhTV.text = "SyntiantPh above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
-//            }
-//            if (countThV2>=consecutivePh){
-//                averageThresholdV2 /= countThV2
-//                averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-//                syntiantPhTV.text = "SyntiantPh above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
-//            } else{
-//                syntiantPhTV.text = "There is no probs above 80% and 90%"
-//            }
-//            val preResult = result?.get(0)
-//
-//            val endTime = SystemClock.uptimeMillis()
-//            inferenceTime = (endTime - startTime).toFloat()
-//
-//            val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
-////                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
-//            resultCls.text = "Overall number of frames $nFrames"
-//            txtSpeed.text =
-//                "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
-//            prevFileName = fileName
+                val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
+//                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
+                resultCls.text = "Overall number of frames $nFrames"
+                txtSpeed.text =
+                    "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
+                prevFileName = fileName
         } else{
             Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
         }

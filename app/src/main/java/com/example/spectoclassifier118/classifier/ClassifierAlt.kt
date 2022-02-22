@@ -51,7 +51,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         var outputs: Unit? = null
         val batchedData = Array(nPredictions){Array(11){FloatArray(inputAudioLength)} }
 
-        for (i in 0 until nPredictions-1){
+        for (i in 0 until nPredictions){
             batchedData[i] = slicedData.slice(i*nBatchSize until (i+1)*nBatchSize).toTypedArray()
         }
         val batchedOutput = Array(nPredictions){Array(nBatchSize){FloatArray(11)} }
@@ -79,17 +79,41 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())
             val sliceOutput = Array(nBatchSize){FloatArray(11)}
-            for(i in 0 until nBatchSize-1) {
+            for (bb in audioClip.floatArray.indices){
+                Log.d("FloatOut", audioClip.floatArray[bb].toString())
+            }
+            for(i in 0 until nBatchSize) {
                 sliceOutput[i] =
                     audioClip.floatArray.slice(i * 11 until (i + 1) * 11).toFloatArray()
             }
             batchedOutput[s] = sliceOutput
+
         for (k in audioClip.floatArray.indices){
             val kk = audioClip.floatArray[k]
             Log.d("audioClip elements $k", kk.toString())
         }
         }
-        
+        var indOut = 0
+        val fullOut = Array(nPredictions*nBatchSize){FloatArray(11)}
+        var ddd = 0
+        for (i in 0 until nPredictions){
+            for (j in 0 until nBatchSize){
+                fullOut[indOut]=batchedData[i][j]
+                for (k in 0 until 11){
+                    Log.d("batchedDataa $ddd", batchedData[i][j][k].toString())
+                    ddd += 1
+                }
+
+            }
+        }
+        for (ss in fullOut.indices){
+            var indd = fullOut[ss]
+            for (kk in indd.indices){
+                Log.d("fullOut $ss", indd[kk].toString())
+            }
+        }
+
+
 
 //        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
 //        byteBuffer.order(ByteOrder.nativeOrder())

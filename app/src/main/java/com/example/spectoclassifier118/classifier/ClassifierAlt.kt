@@ -24,7 +24,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     var numFrames: Int = 0
     val inputAudioLength: Int = 16240 // 1.015 seconds
     val nFFT: Int = 160// 400 // 24 milliseconds
-    val nBatchSize: Int =4
+    val nBatchSize: Int =16
     var nPredictions: Int = 1
 
     @Throws(IOException::class)
@@ -41,6 +41,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
     @SuppressLint("LongLogTag")
     fun makeInference(data: FloatArray): Array<FloatArray> {
         val slicedData = handleAudioLength(data)
+        tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
         nPredictions = numFrames/nBatchSize
         Log.d("batchedData nPredictions", nPredictions.toString())
         Log.d("batchedData numFrames", numFrames.toString())
@@ -74,7 +75,7 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
             val inputData = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, inputAudioLength), DataType.FLOAT32)
             inputData.loadBuffer(byteBuffer)
 
-            tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
+
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
             Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())

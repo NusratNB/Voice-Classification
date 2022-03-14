@@ -20,12 +20,12 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
 
     private val MODEL_PATH: String = "modeltfNightly.49.tflite"
     lateinit var testSlicedData: Array<FloatArray>
-    var inferenceTime: Float = 0.0f
-    var numFrames: Int = 0
-    val inputAudioLength: Int = 16240 // 1.015 seconds
-    val nFFT: Int = 160// 400 // 24 milliseconds
-    val nBatchSize: Int =16
-    var nPredictions: Int = 1
+    private var inferenceTime: Float = 0.0f
+    private var numFrames: Int = 0
+    private val inputAudioLength: Int = 16240 // 1.015 seconds
+    private val nFFT: Int = 160// 400 // 24 milliseconds
+    private val nBatchSize: Int =16
+    private var nPredictions: Int = 1
 
     @Throws(IOException::class)
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {

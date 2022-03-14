@@ -55,7 +55,7 @@ dependencies {
 //    implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly-SNAPSHOT'
 //    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:0.0.0-nightly-SNAPSHOT'
     implementation project(path: ':mylibrary')
-    implementation files('libs\\ae-awt.jar')
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt"
     testImplementation 'junit:junit:'
     implementation 'org.apache.commons:commons-csv:1.8'
     implementation 'org.apache.commons:commons-math3:3.6.1'

@@ -59,7 +59,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var fourthModTxt: TextView
     lateinit var fifthModTxt: TextView
 
-    lateinit var result: Array<FloatArray>
+    lateinit var resultFirst: Array<FloatArray>
+    lateinit var resultSecond: Array<FloatArray>
+    lateinit var resultThird: Array<FloatArray>
+    lateinit var resultFourth: Array<FloatArray>
+    lateinit var resultFifth: Array<FloatArray>
+
     lateinit var so: SmoothOutput
     lateinit var genCSV: GenerateCSV
     var nFrames: Int = 1
@@ -165,8 +170,11 @@ class MainActivity : AppCompatActivity() {
                 val datagenEndTime = SystemClock.uptimeMillis()
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
                 val startTime = SystemClock.uptimeMillis()
-                result = makePrediction()
-                nFrames = result.size
+                resultFirst =
+                    audioData?.get(0)
+                        ?.let { it1 -> makePrediction(modelName = firstModelName, data = it1,
+                            audioLength = firstModAudLength, nBatch = 16) }!!
+                nFrames = resultFirst.size
                 val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
                 val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
                 val csvFullPath = pathToCSVFiles.absolutePath + "/" + csvName

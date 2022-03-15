@@ -63,6 +63,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var genCSV: GenerateCSV
     var nFrames: Int = 1
 
+    val firstModel: String = ""
+    val secondModel: String = ""
+    val thirdModel: String = ""
+    val fourthModel: String = ""
+    val fifthModel: String = ""
+
 
 
     private val requestPermission: ActivityResultLauncher<Array<String>> =
@@ -339,6 +345,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    }
+
+    private fun makePredict(modelName: String, data: FloatArray, audioLength: Int){
 
     }
 

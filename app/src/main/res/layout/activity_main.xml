@@ -13,11 +13,11 @@
         android:layout_height="wrap_content"/>
 
     <TextView
-        android:id="@+id/customPh"
+        android:id="@+id/firstModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp"
-        android:text="Custom ph"
+        android:text="First Model"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"
@@ -27,11 +27,11 @@
         app:layout_constraintBottom_toBottomOf = "@+id/txtSpeed"  />
 
     <TextView
-        android:id="@+id/syntiantPh"
+        android:id="@+id/secondModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10sp"
-        android:text="syntiant ph"
+        android:text="Second Model"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"
@@ -41,39 +41,41 @@
         app:layout_constraintBottom_toBottomOf = "@+id/txtSpeed"  />
 
     <TextView
-        android:id="@+id/googlePh"
+        android:id="@+id/thirdModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp"
-        android:text="google ph"
+        android:text="Third Model"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"
+
         app:layout_constraintTop_toBottomOf = "@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf = "@+id/txtSpeed"  />
 
     <TextView
-        android:id="@+id/result"
+        android:id="@+id/fourthModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp"
-        android:text="result"
+        android:gravity="left"
+        android:text="Fourth Model"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf = "@+id/googlePh"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/txtSpeed"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf = "@+id/txtSpeed"  />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/googlePh" />
 
     <TextView
-        android:id="@+id/txtSpeed"
+        android:id="@+id/fifthModel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp"
-        android:text="speed"
+        android:text="Fifth Model"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"

@@ -1,4 +1,4 @@
-package com.example.spectoclassifier118.mmod
+package com.example.spectoclassifier118.classifier
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -14,6 +14,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+
 
 class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
@@ -100,14 +101,14 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
         lateinit var probability: TensorBuffer
         var startTime = System.currentTimeMillis()
-        val finalResult = Array(numFrames){FloatArray(11)}
+        val finalResult = Array(numFrames){FloatArray(7)}
         var outputs: Unit? = null
-        val batchedData = Array(nPredictions){Array(11){FloatArray(inputAudioLength)} }
+        val batchedData = Array(nPredictions){Array(7){FloatArray(inputAudioLength)} }
 
         for (i in 0 until nPredictions){
             batchedData[i] = slicedData.slice(i*nBatchSize until (i+1)*nBatchSize).toTypedArray()
         }
-        val batchedOutput = Array(nPredictions){Array(nBatchSize){FloatArray(11)} }
+        val batchedOutput = Array(nPredictions){Array(nBatchSize){FloatArray(7)} }
 
         for (s in 0 until nPredictions){
             testSlicedData = batchedData[s] //Array(nBatchSize){ FloatArray(inputAudioLength) }
@@ -119,10 +120,10 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
                     byteBuffer.putFloat(testSlicedData[i][j])
                 }
             }
-            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(nBatchSize*4*11)
+            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(nBatchSize*4*7)
             outputByteBuffer.order(ByteOrder.nativeOrder())
             //            }
-            val audioClip = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, 11), DataType.FLOAT32)
+            val audioClip = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, 7), DataType.FLOAT32)
             audioClip.loadBuffer(outputByteBuffer)
             val inputData = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, inputAudioLength), DataType.FLOAT32)
             inputData.loadBuffer(byteBuffer)
@@ -131,13 +132,13 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
             Log.d("Outputs ", audioClip.floatArray.size.toString())
             Log.d("sliced data size", slicedData.size.toString())
-            val sliceOutput = Array(nBatchSize){FloatArray(11)}
+            val sliceOutput = Array(nBatchSize){FloatArray(7)}
             for (bb in audioClip.floatArray.indices){
                 Log.d("FloatOut", audioClip.floatArray[bb].toString())
             }
             for(i in 0 until nBatchSize) {
                 sliceOutput[i] =
-                    audioClip.floatArray.slice(i * 11 until (i + 1) * 11).toFloatArray()
+                    audioClip.floatArray.slice(i * 7 until (i + 1) * 7).toFloatArray()
             }
             batchedOutput[s] = sliceOutput
 
@@ -147,7 +148,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             }
         }
         val indOut = 0
-        val fullOut = Array(nPredictions*nBatchSize){FloatArray(11)}
+        val fullOut = Array(nPredictions*nBatchSize){FloatArray(7)}
         var ddd = 0
         for (i in 0 until nPredictions){
             for (j in 0 until nBatchSize){

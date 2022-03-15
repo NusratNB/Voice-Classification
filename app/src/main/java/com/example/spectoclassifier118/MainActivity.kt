@@ -13,9 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.spectoclassifier118.classifier.Classifier
 import com.example.spectoclassifier118.classifier.ClassifierAlt
 import com.example.spectoclassifier118.spectoimage.SpectrogramGenerator
+import com.example.spectoclassifier118.classifier.CoroutinesHandler
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -36,14 +36,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var btnClassification: Button
     lateinit var showBtn: Button
 
-    private lateinit var classifier: Classifier
+    private lateinit var classifier: CoroutinesHandler
     private lateinit var classifierAlt: ClassifierAlt
     private lateinit var spectogenerator: SpectrogramGenerator
-    lateinit var resultCls: TextView
     var dataGenTime: Float = 0.0f
     var inferenceTime: Float = 0.0f
     var multiBatchInferenceTime: Float = 0.0f
-    lateinit var txtSpeed: TextView
     lateinit var btnPlay: Button
     lateinit var fileName: File
     var prevFileName: File =File("")
@@ -55,19 +53,35 @@ class MainActivity : AppCompatActivity() {
     lateinit var googlePh: FloatArray
     lateinit var customPh: FloatArray
 
-    lateinit var customPhTV: TextView
-    lateinit var googlePhTV: TextView
-    lateinit var syntiantPhTV: TextView
+    lateinit var firstModTxt: TextView
+    lateinit var secondModTxt: TextView
+    lateinit var thirdModTxt: TextView
+    lateinit var fourthModTxt: TextView
+    lateinit var fifthModTxt: TextView
+
     lateinit var result: Array<FloatArray>
     lateinit var so: SmoothOutput
     lateinit var genCSV: GenerateCSV
     var nFrames: Int = 1
 
-    val firstModel: String = ""
-    val secondModel: String = ""
-    val thirdModel: String = ""
-    val fourthModel: String = ""
-    val fifthModel: String = ""
+    private val firstModelName: String = ""
+    private val secondModelName: String = ""
+    private val thirdModelName: String = ""
+    private val fourthModelName: String = ""
+    private val fifthModelName: String = ""
+
+    private val firstModAudLength: Int = 3195
+    private val secModAudLength: Int = 5010
+    private val thirdModAudLength: Int = 8640
+    private val fourthModAudLength: Int = 12240
+    private val fifthModAudLent: Int = 15900
+
+//    # Audio length
+//    # mean - 1.5* std = 2955 + 240 = 3195
+//    # mean - std = 8400 - 3630 = 4770 + 240 = 5010
+//    # mean = 8400 samples ==>8640
+//    # mean + std  = 12000 + 240 = 12240
+//    # mean + 2*std = 15660 + 240 = 15900
 
 
 
@@ -95,6 +109,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        firstModTxt = findViewById(R.id.firstModel)
+        secondModTxt = findViewById(R.id.secondModel)
+        thirdModTxt = findViewById(R.id.thirdModel)
+        fourthModTxt = findViewById(R.id.fourthModel)
+        fifthModTxt = findViewById(R.id.fifthModel)
+
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { // get permission
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO),200);
             requestStoragePermission()
@@ -113,7 +135,6 @@ class MainActivity : AppCompatActivity() {
 
         var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
-        txtSpeed = findViewById(R.id.txtSpeed)
         btnRecord = findViewById(R.id.btnRecord)
         btnRecord.text = "Start"
         btnRecord.setOnClickListener{
@@ -143,9 +164,8 @@ class MainActivity : AppCompatActivity() {
                 val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
                 val datagenEndTime = SystemClock.uptimeMillis()
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
-                resultCls = findViewById(R.id.result)
                 val startTime = SystemClock.uptimeMillis()
-                result = audioData?.get(0)?.let { classifier.analyze(it) }!!
+                result = makePrediction()
                 nFrames = result.size
                 val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
                 val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
@@ -173,8 +193,6 @@ class MainActivity : AppCompatActivity() {
                     customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
                 var customClProb = customPh[customMaxId!!]*100.0
                 customClProb = String.format("%.2f", customClProb).toDouble()
-                customPhTV = findViewById(R.id.customPh)
-                customPhTV.text = "CustomPH Result: " + classes[customMaxId!!] + " | " +customClProb + "%"
 
                 googlePh = FloatArray(11)
                 if (smoothedData != null) {
@@ -185,8 +203,6 @@ class MainActivity : AppCompatActivity() {
                 val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
                 var googleClProb = googlePh[googleMaxId!!]*100.0
                 googleClProb = String.format("%.2f", googleClProb).toDouble()
-                googlePhTV = findViewById(R.id.googlePh)
-                googlePhTV.text = "GooglePH(Smoothing) Result: " + classes[googleMaxId!!] + " | " +googleClProb + "%"
 
                 val syntiantPhThresholdV1 = 90.0
                 val syntiantPhThresholdV2 = 80.0
@@ -208,16 +224,13 @@ class MainActivity : AppCompatActivity() {
                         averageThresholdV2 += currentProb
                     }
                 }
-                syntiantPhTV = findViewById(R.id.syntiantPh)
                 if (countThV1>=consecutivePh){
                     averageThresholdV1 /= countThV1
                     averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-                    syntiantPhTV.text = "SyntiantPh above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
                 }
                 if (countThV2>=consecutivePh){
                     averageThresholdV2 /= countThV2
                     averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-                    syntiantPhTV.text = "SyntiantPh above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
                 } else{
                     syntiantPhTV.text = "There is no probs above 80% and 90%"
                 }
@@ -227,10 +240,6 @@ class MainActivity : AppCompatActivity() {
                 inferenceTime = (endTime - startTime).toFloat()
 
                 val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
-//                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
-                resultCls.text = "Overall number of frames $nFrames"
-                txtSpeed.text =
-                    "Inference time: $inferenceTime ms | Datagen time: $dataGenTime ms"
                 prevFileName = fileName
             } else{
                 Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
@@ -250,9 +259,6 @@ class MainActivity : AppCompatActivity() {
             val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
             val datagenEndTime = SystemClock.uptimeMillis()
             dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
-
-
-            resultCls = findViewById(R.id.result)
             val startTime = SystemClock.uptimeMillis()
 
 //            result = audioData?.get(0)?.let { classifier.analyze(it) }!!
@@ -316,18 +322,16 @@ class MainActivity : AppCompatActivity() {
                     averageThresholdV2 += currentProb
                 }
             }
-                syntiantPhTV = findViewById(R.id.syntiantPh)
                 if (countThV1>=consecutivePh){
                     averageThresholdV1 /= countThV1
                     averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-                    syntiantPhTV.text = "SyntiantPh above 90.0%: " + countThV1 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV1 + "%"
+
                 }
                 if (countThV2>=consecutivePh){
                     averageThresholdV2 /= countThV2
                     averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-                    syntiantPhTV.text = "SyntiantPh above 80.0%: " + countThV2 + " Class: "+ classes[customMaxId!!] + " | " + averageThresholdV2 + "%"
                 } else{
-                    syntiantPhTV.text = "There is no probs above 80% and 90%"
+
                 }
                 val preResult = ressAlt?.get(0)
 
@@ -335,10 +339,6 @@ class MainActivity : AppCompatActivity() {
                 multiBatchInferenceTime = (endTime - startTime).toFloat()
 
                 val maxIdx = preResult?.maxOrNull()?.let { it1 -> preResult.indexOfFirst { it == it1 } }
-//                resultCls.text ="Result: " + classes[maxIdx!!] + " | " + preResult[maxIdx]*100.0 +"%"
-                resultCls.text = "Overall number of frames $nFrames"
-                txtSpeed.text =
-                    "Inference time: $multiBatchInferenceTime ms | Datagen time: $dataGenTime ms"
                 prevFileName = fileName
         } else{
             Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
@@ -348,7 +348,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun makePredict(modelName: String, data: FloatArray, audioLength: Int){
+    private fun makePrediction(
+        modelName: String,
+        data: FloatArray,
+        audioLength: Int,
+        nBatch: Int
+    ): Array<FloatArray> {
+
+        classifier.initAudioLength(audioLength)
+        classifier.initModelName(modelName)
+        classifier.initBatchSize(nBatch)
+        return data.let { classifier.makeInference(it) }
+
 
     }
 
@@ -442,7 +453,7 @@ class MainActivity : AppCompatActivity() {
     private fun initClassifierSpectrogramGenerator() {
         so = SmoothOutput(nFrames)
         genCSV = GenerateCSV()
-        classifier = Classifier (this)
+        classifier = CoroutinesHandler(this, this.assets)
         classifierAlt = ClassifierAlt(this, this.assets)
         spectogenerator = SpectrogramGenerator(this)
 //        spectogenerator.initVars(pathToFolds)

@@ -51,6 +51,15 @@ class RecognitionFilter(data: Array<FloatArray>) {
 
         val customPh = FloatArray(numClasses)
         val transposedData = so.transposeOutput(resultData.size, resultData)
+        for (i in transposedData.indices){
+            customPh[i] = (transposedData[i].average()).toFloat()
+        }
+        val customMaxId =
+            customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
+        var customClProb = customPh[customMaxId!!]*100.0
+        customClProb = String.format("%.2f", customClProb).toDouble()
+        val customClassName = listOfClasses[customMaxId]
+
     }
 
 

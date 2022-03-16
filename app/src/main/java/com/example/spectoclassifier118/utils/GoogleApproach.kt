@@ -1,5 +1,6 @@
 package com.example.spectoclassifier118.utils
 
+import android.util.Log
 import kotlin.math.floor
 
 class RecognitionFilter(data: Array<FloatArray>) {
@@ -11,7 +12,12 @@ class RecognitionFilter(data: Array<FloatArray>) {
     private val listOfClasses = listOf("고마워", "보고싶어", "빨리", "사랑해", "싫어", "아파", "짜증나")
     private val numClasses: Int = listOfClasses.size
 
-    private lateinit var
+    lateinit var googleClsName: String
+    lateinit var syntiantClsName: String
+    lateinit var customClsName: String
+    lateinit var customMaxId: Int
+
+
 
 
 
@@ -25,7 +31,7 @@ class RecognitionFilter(data: Array<FloatArray>) {
         val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
         var googleClProb = googlePh[googleMaxId!!]*100.0
         googleClProb = String.format("%.2f", googleClProb).toDouble()
-        val className: String = listOfClasses[googleMaxId]
+        googleClsName = listOfClasses[googleMaxId]
 
         return googleClProb
     }
@@ -40,13 +46,28 @@ class RecognitionFilter(data: Array<FloatArray>) {
         var countThV1 = 0
         var countThV2 = 0
         val consecutivePh = floor(nFrames*0.3).toInt()
+        val dominantClass = so.transposeOutput(resultData.size, resultData)[customMaxId]
+
+        for(i in dominantClass.indices){
+            val currentProb = dominantClass[i]*100.0
+            Log.d("Dominant class probs: ", currentProb.toString())
+            if (currentProb>syntiantPhThresholdV1){
+                countThV1 +=1
+                averageThresholdV1 += currentProb
+            }
+            if (currentProb>syntiantPhThresholdV2){
+                countThV2 +=1
+                averageThresholdV2 += currentProb
+            }
+        }
+
 
 
 
 
     }
 
-    fun takeAverage(){
+    fun takeAverage(): Double{
         //TODO 3.Take average
 
         val customPh = FloatArray(numClasses)
@@ -54,12 +75,12 @@ class RecognitionFilter(data: Array<FloatArray>) {
         for (i in transposedData.indices){
             customPh[i] = (transposedData[i].average()).toFloat()
         }
-        val customMaxId =
-            customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }
-        var customClProb = customPh[customMaxId!!]*100.0
+        customMaxId =
+            customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }!!
+        var customClProb = customPh[customMaxId]*100.0
         customClProb = String.format("%.2f", customClProb).toDouble()
-        val customClassName = listOfClasses[customMaxId]
-
+        customClsName = listOfClasses[customMaxId]
+        return customClProb
     }
 
 

@@ -60,6 +60,17 @@ class RecognitionFilter(data: Array<FloatArray>) {
                 averageThresholdV2 += currentProb
             }
         }
+        if (countThV1>=consecutivePh){
+            averageThresholdV1 /= countThV1
+            averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
+
+        }
+        if (countThV2>=consecutivePh){
+            averageThresholdV2 /= countThV2
+            averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
+        } else{
+
+        }
 
 
 

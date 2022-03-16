@@ -2,13 +2,16 @@ package com.example.spectoclassifier118.utils
 
 import kotlin.math.floor
 
-class RecognitionFilter(resultData: Array<FloatArray>) {
+class RecognitionFilter(data: Array<FloatArray>) {
 
+    private val resultData = data
     private val nFrames: Int = resultData.size
     private val so = SmoothOutput(nFrames)
     private val smoothedData = so.smoothData(resultData)
     private val listOfClasses = listOf("고마워", "보고싶어", "빨리", "사랑해", "싫어", "아파", "짜증나")
     private val numClasses: Int = listOfClasses.size
+
+    private lateinit var
 
 
 
@@ -45,6 +48,9 @@ class RecognitionFilter(resultData: Array<FloatArray>) {
 
     fun takeAverage(){
         //TODO 3.Take average
+
+        val customPh = FloatArray(numClasses)
+        val transposedData = so.transposeOutput(resultData.size, resultData)
     }
 
 

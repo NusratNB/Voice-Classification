@@ -191,8 +191,8 @@ class MainActivity : AppCompatActivity() {
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
                 val startTime = SystemClock.uptimeMillis()
 
-                val differs = mutableListOf<Differ>()
-                val a1 = lifecycleScope.async{
+                val differs = mutableListOf<Deferred<Unit>>()
+                val a1 = GlobalScope.async{
                     resultFirst =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction( assets,
@@ -202,7 +202,8 @@ class MainActivity : AppCompatActivity() {
                         }!!
                 }
 
-                val a2 = lifecycleScope.async {
+
+                val a2 = GlobalScope.async {
                     resultSecond =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -224,7 +225,7 @@ class MainActivity : AppCompatActivity() {
 //                        )
 //                    }!!
 
-                val a3 = lifecycleScope.async {
+                val a3 = GlobalScope.async {
                     resultFourth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -234,7 +235,7 @@ class MainActivity : AppCompatActivity() {
                         }!!
                 }
 
-                val a4 = lifecycleScope.async {
+                val a4 = GlobalScope.async {
                     resultFifth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -243,9 +244,18 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-                runBlocking {
+                differs.add(a1)
+                differs.add(a2)
+                differs.add(a3)
+                differs.add(a4)
 
+                runBlocking {
+                    Log.d("ssss", "start thread logic")
+                    differs.awaitAll()
+
+                    Log.d("ssss", "end thread logic")
                 }
+                Log.d("ssss", "start ui logic")
                 val firstModRecFilter = RecognitionFilter(resultFirst)
                 val secModRecFilter = RecognitionFilter(resultSecond)
 //                val thirdModRecFilter = RecognitionFilter(resultThird)

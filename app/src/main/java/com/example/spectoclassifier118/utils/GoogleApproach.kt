@@ -2,6 +2,7 @@ package com.example.spectoclassifier118.utils
 
 import android.util.Log
 import kotlin.math.floor
+import kotlin.properties.Delegates
 
 class RecognitionFilter(data: Array<FloatArray>) {
 
@@ -15,10 +16,9 @@ class RecognitionFilter(data: Array<FloatArray>) {
     lateinit var googleClsName: String
     lateinit var syntiantClsName: String
     lateinit var customClsName: String
-    lateinit var customMaxId: Int
-
-
-
+    var customMaxId by Delegates.notNull<Int>()
+    var averageThresholdV1 = 0.0
+    var averageThresholdV2 = 0.0
 
 
     fun googleApproach(): Double {
@@ -41,8 +41,7 @@ class RecognitionFilter(data: Array<FloatArray>) {
 
         val syntiantPhThresholdV1 = 85.0
         val syntiantPhThresholdV2 = 70.0
-        var averageThresholdV1 = 0.0
-        var averageThresholdV2 = 0.0
+
         var countThV1 = 0
         var countThV2 = 0
         val consecutivePh = floor(nFrames*0.3).toInt()
@@ -68,14 +67,7 @@ class RecognitionFilter(data: Array<FloatArray>) {
         if (countThV2>=consecutivePh){
             averageThresholdV2 /= countThV2
             averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-        } else{
-
         }
-
-
-
-
-
     }
 
     fun takeAverage(): Double{

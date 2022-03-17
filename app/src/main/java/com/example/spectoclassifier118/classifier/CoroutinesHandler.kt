@@ -26,7 +26,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
     private var inputAudioLength: Int = 0
     private var nBatchSize: Int = 1
     private var nPredictions: Int = 1
-    private lateinit var MODEL_NAME: String
+    private var MODEL_NAME: String = ""
 
 
     @Throws(IOException::class)
@@ -56,7 +56,10 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
     }
 
 
-    private val tfLite: Interpreter? = getModel(activity, MODEL_NAME)
+
+
+
+
 
 
     private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
@@ -92,15 +95,16 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
     }
 
     @SuppressLint("LongLogTag")
-    fun makeInference(data: FloatArray): Array<FloatArray> {
+    fun makeInference(activity: AssetManager,data: FloatArray): Array<FloatArray> {
         val slicedData = handleAudioLength(data)
+        val tfLite: Interpreter? = getModel(activity, MODEL_NAME)
         tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
         nPredictions = numFrames/nBatchSize
         Log.d("batchedData nPredictions", nPredictions.toString())
         Log.d("batchedData numFrames", numFrames.toString())
 
-        lateinit var probability: TensorBuffer
-        var startTime = System.currentTimeMillis()
+
+        val startTime = System.currentTimeMillis()
         val finalResult = Array(numFrames){FloatArray(7)}
         var outputs: Unit? = null
         val batchedData = Array(nPredictions){Array(7){FloatArray(inputAudioLength)} }

@@ -55,13 +55,6 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         nBatchSize = nBatch
     }
 
-
-
-
-
-
-
-
     private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
         lateinit var slicedData: Array<FloatArray>
 
@@ -71,6 +64,8 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
             Log.d("handleAudio: numFrames", numFrames.toString())
+            Log.d("handleAudio: inputAudioLength", inputAudioLength.toString())
+            Log.d("handleAudio: currentAudioLength", currentAudioLength.toString())
             for (i in 0 until (numFrames)){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }

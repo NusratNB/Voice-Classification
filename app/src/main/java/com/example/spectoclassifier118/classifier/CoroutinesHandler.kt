@@ -67,6 +67,11 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             Log.d("handleAudio: inputAudioLength", inputAudioLength.toString())
             Log.d("handleAudio: currentAudioLength", currentAudioLength.toString())
             for (i in 0 until (numFrames)){
+                Log.d("handleAudio: numFrames nFFT", numFrames.toString())
+                Log.d("handleAudio: inputAudioLength nFFT", inputAudioLength.toString())
+                Log.d("handleAudio: currentAudioLength nFFT", currentAudioLength.toString())
+                Log.d("i*nFFT", (i*nFFT).toString())
+                Log.d("inputAudioLength + i*nFFT)", (inputAudioLength + i*nFFT).toString())
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
 
@@ -152,7 +157,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         for (i in 0 until nPredictions){
             for (j in 0 until nBatchSize){
                 fullOut[indOut]=batchedOutput[i][j]
-                for (k in 0 until 11){
+                for (k in 0 until 7){
                     Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
                     ddd += 1
                 }

@@ -36,9 +36,8 @@ import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var btnRecord: Button
+    private lateinit var btnRecord: Button
     lateinit var btnClassification: Button
-    lateinit var showBtn: Button
 
     private lateinit var classifier: CoroutinesHandler
     var dataGenTime: Float = 0.0f
@@ -66,7 +65,7 @@ class MainActivity : AppCompatActivity() {
 
     private val firstModelName: String = "ModFirst.tflite"
     private val secondModelName: String = "ModSecond.tflite"
-//    private val thirdModelName: String = ""
+    private val thirdModelName: String = "ModThird.tflite"
     private val fourthModelName: String = "ModFourth.tflite"
     private val fifthModelName: String = "ModFifth.tflite"
 
@@ -78,27 +77,29 @@ class MainActivity : AppCompatActivity() {
 
     private var firstModGoogProb: Float = 0.0f
     private var secModGoogProb: Float = 0.0f
-    private val thirdModGoogProb: Float = 0.0f
+    private var thirdModGoogProb: Float = 0.0f
     private var fourthModGoogProb: Float = 0.0f
     private var fifthModGoogProb: Float = 0.0f
 
     private var firstModAveProb: Float = 0.0f
     private var secModAveProb: Float = 0.0f
-    private val thirdModAveProb: Float = 0.0f
+    private var thirdModAveProb: Float = 0.0f
     private var fourthModAveProb: Float = 0.0f
     private var fifthModAveProb: Float = 0.0f
 
     private var firstModGoogClsName: String = ""
     private var secModGoogClsName: String = ""
-    private val thirdModGoogClsName: String = ""
+    private var thirdModGoogClsName: String = ""
     private var fourthModGoogClsName: String = ""
     private var fifthModGoogClsName: String = ""
 
     private var firstModAveClsName: String = ""
     private var secModAveClsName: String = ""
-    private val thirdModAveClsName: String = ""
+    private var thirdModAveClsName: String = ""
     private var fourthModAveClsName: String = ""
     private var fifthModAveClsName: String = ""
+
+    private val batchSize: Int = 1
 
 
 
@@ -129,6 +130,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
 
     @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.R)
@@ -197,7 +199,7 @@ class MainActivity : AppCompatActivity() {
                         audioData?.get(0)?.let { it1 ->
                             makePrediction( assets,
                                 modelName = firstModelName, data = it1,
-                                audioLength = firstModAudLength, nBatch = 8
+                                audioLength = firstModAudLength, nBatch = batchSize
                             )
                         }!!
                 }
@@ -208,7 +210,18 @@ class MainActivity : AppCompatActivity() {
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
                                 modelName = secondModelName, data = it1,
-                                audioLength = secModAudLength, nBatch = 8
+                                audioLength = secModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+
+
+                val a3 = GlobalScope.async {
+                    resultThird =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = thirdModelName, data = it1,
+                                audioLength = thirdModAudLength, nBatch = batchSize
                             )
                         }!!
                 }
@@ -216,31 +229,23 @@ class MainActivity : AppCompatActivity() {
 
 
 
-//                //Todo finish third model
-//                resultThird =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction(
-//                            modelName = thirdModelName, data = it1,
-//                            audioLength = thirdModAudLength, nBatch = 8
-//                        )
-//                    }!!
 
-                val a3 = GlobalScope.async {
+                val a4 = GlobalScope.async {
                     resultFourth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
                                 modelName = fourthModelName, data = it1,
-                                audioLength = fourthModAudLength, nBatch = 8
+                                audioLength = fourthModAudLength, nBatch = batchSize
                             )
                         }!!
                 }
 
-                val a4 = GlobalScope.async {
+                val a5 = GlobalScope.async {
                     resultFifth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
                                 modelName = fifthModelName, data = it1,
-                                audioLength = fifthModAudLent, nBatch = 8
+                                audioLength = fifthModAudLent, nBatch = batchSize
                             )
                         }!!
                 }
@@ -248,6 +253,7 @@ class MainActivity : AppCompatActivity() {
                 differs.add(a2)
                 differs.add(a3)
                 differs.add(a4)
+                differs.add(a5)
 
                 runBlocking {
                     Log.d("ssss", "start thread logic")
@@ -258,7 +264,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("ssss", "start ui logic")
                 val firstModRecFilter = RecognitionFilter(resultFirst)
                 val secModRecFilter = RecognitionFilter(resultSecond)
-//                val thirdModRecFilter = RecognitionFilter(resultThird)
+                val thirdModRecFilter = RecognitionFilter(resultThird)
                 val fourthModRecFilter = RecognitionFilter(resultFourth)
                 val fifthModRecFilter = RecognitionFilter(resultFifth)
 
@@ -267,6 +273,9 @@ class MainActivity : AppCompatActivity() {
 
                 secModGoogProb = secModRecFilter.googleApproach().toFloat()
                 secModGoogClsName = secModRecFilter.googleClsName
+
+                thirdModGoogProb = thirdModRecFilter.googleApproach().toFloat()
+                thirdModGoogClsName = thirdModRecFilter.googleClsName
 
                 fourthModGoogProb = fourthModRecFilter.googleApproach().toFloat()
                 fourthModGoogClsName = fourthModRecFilter.googleClsName
@@ -280,6 +289,9 @@ class MainActivity : AppCompatActivity() {
                 secModAveProb = secModRecFilter.takeAverage().toFloat()
                 secModAveClsName = secModRecFilter.customClsName
 
+                thirdModAveProb = thirdModRecFilter.takeAverage().toFloat()
+                thirdModAveClsName = thirdModRecFilter.customClsName
+
                 fourthModAveProb = fourthModRecFilter.takeAverage().toFloat()
                 fourthModAveClsName = fourthModRecFilter.customClsName
 
@@ -288,6 +300,7 @@ class MainActivity : AppCompatActivity() {
 
                 firstModTxt.text = "1-M GProb: $firstModGoogProb GCl: $firstModGoogClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
                 secondModTxt.text = "2-M GProb: $secModGoogProb GCl: $secModGoogClsName AProb: $secModAveProb ACl: $secModAveClsName"
+                thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
                 fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
                 fifthModTxt.text = "5-M GProb: $fifthModGoogProb GCl: $fifthModGoogClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
 
@@ -316,8 +329,7 @@ class MainActivity : AppCompatActivity() {
             audioRecoder.startPlaying(this, 1, fileName)
         }
 
-        showBtn = findViewById(R.id.showButton)
-        Toast.makeText(this, "This button has no function", Toast.LENGTH_SHORT).show()
+
     }
 
     private suspend fun makePrediction(

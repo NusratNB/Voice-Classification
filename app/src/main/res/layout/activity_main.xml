@@ -127,13 +127,7 @@
             android:layout_margin="5dp"
             android:text="predict"/>
 
-        <Button
-            android:id="@+id/showButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:text="mbPredict"
-            android:padding="5dp"/>
+
 
     </LinearLayout>
 

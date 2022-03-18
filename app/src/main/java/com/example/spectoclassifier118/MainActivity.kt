@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
     private var fourthModAveClsName: String = ""
     private var fifthModAveClsName: String = ""
 
-    private val batchSize: Int = 1
+    private val batchSize: Int = 8
 
 
 
@@ -193,7 +193,47 @@ class MainActivity : AppCompatActivity() {
                 dataGenTime = (datagenEndTime - datagenStartTime).toFloat()
                 val startTime = SystemClock.uptimeMillis()
 
-                val differs = mutableListOf<Deferred<Unit>>()
+
+//                lifecycleScope.launch{
+//                    resultFirst =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction( assets,
+//                                modelName = firstModelName, data = it1,
+//                                audioLength = firstModAudLength, nBatch = batchSize
+//                            )
+//                        }!!
+//                    resultSecond =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction(assets,
+//                                modelName = secondModelName, data = it1,
+//                                audioLength = secModAudLength, nBatch = batchSize
+//                            )
+//                        }!!
+//
+//                    resultThird =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction(assets,
+//                                modelName = thirdModelName, data = it1,
+//                                audioLength = thirdModAudLength, nBatch = batchSize
+//                            )
+//                        }!!
+//                    resultFourth =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction(assets,
+//                                modelName = fourthModelName, data = it1,
+//                                audioLength = fourthModAudLength, nBatch = batchSize
+//                            )
+//                        }!!
+//                    resultFifth =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction(assets,
+//                                modelName = fifthModelName, data = it1,
+//                                audioLength = fifthModAudLent, nBatch = batchSize
+//                            )
+//                        }!!
+//                }
+//                val differs = mutableListOf<Deferred<T>>()
+
                 val a1 = GlobalScope.async{
                     resultFirst =
                         audioData?.get(0)?.let { it1 ->
@@ -249,11 +289,12 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-                differs.add(a1)
-                differs.add(a2)
-                differs.add(a3)
-                differs.add(a4)
-                differs.add(a5)
+                val differs = listOf(a1, a2, a3, a4, a5)
+//                differs.add(a1)
+//                differs.add(a2 as Deferred<Unit>)
+//                differs.add(a3 as Deferred<Unit>)
+//                differs.add(a4 as Deferred<Unit>)
+//                differs.add(a5 as Deferred<Unit>)
 
                 runBlocking {
                     Log.d("ssss", "start thread logic")
@@ -332,7 +373,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private suspend fun makePrediction(
+    private fun makePrediction(
         activity: AssetManager,
         modelName: String,
         data: FloatArray,
@@ -341,12 +382,12 @@ class MainActivity : AppCompatActivity() {
     ): Array<FloatArray> {
         var resultData: Array<FloatArray> = emptyArray<FloatArray>()
 
-        withContext(Dispatchers.IO){
+//        withContext(Dispatchers.Default){
             classifier.initAudioLength(audioLength)
             classifier.initModelName(modelName)
             classifier.initBatchSize(nBatch)
             resultData = data.let { classifier.makeInference(activity,it) }
-        }
+//        }
         return resultData
     }
 

@@ -236,109 +236,109 @@ class MainActivity : AppCompatActivity() {
 //                }
 //                val differs = mutableListOf<Deferred<T>>()
 
-//                val a1 = GlobalScope.async{
-//                    resultFirst =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction( assets,
-//                                modelName = firstModelName, data = it1,
-//                                audioLength = firstModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-                resultFirst =
-                    audioData?.get(0)?.let { it1 ->
-                        makePrediction( assets,
-                            modelName = firstModelName, data = it1,
-                            audioLength = firstModAudLength, nBatch = batchSize
-                        )
-                    }!!
+                val a1 = lifecycleScope.launch{
+                    resultFirst =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction( assets,
+                                modelName = firstModelName, data = it1,
+                                audioLength = firstModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+//                resultFirst =
+//                    audioData?.get(0)?.let { it1 ->
+//                        makePrediction( assets,
+//                            modelName = firstModelName, data = it1,
+//                            audioLength = firstModAudLength, nBatch = batchSize
+//                        )
+//                    }!!
 
 
-//                val a2 = GlobalScope.async {
-//                    resultSecond =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = secondModelName, data = it1,
-//                                audioLength = secModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-                resultSecond =
-                    audioData?.get(0)?.let { it1 ->
-                        makePrediction(assets,
-                            modelName = secondModelName, data = it1,
-                            audioLength = secModAudLength, nBatch = batchSize
-                        )
-                    }!!
+                val a2 = lifecycleScope.launch{
+                    resultSecond =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = secondModelName, data = it1,
+                                audioLength = secModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+//                resultSecond =
+//                    audioData?.get(0)?.let { it1 ->
+//                        makePrediction(assets,
+//                            modelName = secondModelName, data = it1,
+//                            audioLength = secModAudLength, nBatch = batchSize
+//                        )
+//                    }!!
 
 
-//                val a3 = GlobalScope.async {
-//                    resultThird =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = thirdModelName, data = it1,
-//                                audioLength = thirdModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-                resultThird =
-                    audioData?.get(0)?.let { it1 ->
-                        makePrediction(assets,
-                            modelName = thirdModelName, data = it1,
-                            audioLength = thirdModAudLength, nBatch = batchSize
-                        )
-                    }!!
+                val a3 = lifecycleScope.launch {
+                    resultThird =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = thirdModelName, data = it1,
+                                audioLength = thirdModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+//                resultThird =
+//                    audioData?.get(0)?.let { it1 ->
+//                        makePrediction(assets,
+//                            modelName = thirdModelName, data = it1,
+//                            audioLength = thirdModAudLength, nBatch = batchSize
+//                        )
+//                    }!!
 
 
 
 
 
-//                val a4 = GlobalScope.async {
-//                    resultFourth =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = fourthModelName, data = it1,
-//                                audioLength = fourthModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-                resultFourth =
-                    audioData?.get(0)?.let { it1 ->
-                        makePrediction(assets,
-                            modelName = fourthModelName, data = it1,
-                            audioLength = fourthModAudLength, nBatch = batchSize
-                        )
-                    }!!
+                val a4 = lifecycleScope.launch {
+                    resultFourth =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = fourthModelName, data = it1,
+                                audioLength = fourthModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+//                resultFourth =
+//                    audioData?.get(0)?.let { it1 ->
+//                        makePrediction(assets,
+//                            modelName = fourthModelName, data = it1,
+//                            audioLength = fourthModAudLength, nBatch = batchSize
+//                        )
+//                    }!!
 
-//                val a5 = GlobalScope.async {
-//                    resultFifth =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = fifthModelName, data = it1,
-//                                audioLength = fifthModAudLent, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-                resultFifth =
-                    audioData?.get(0)?.let { it1 ->
-                        makePrediction(assets,
-                            modelName = fifthModelName, data = it1,
-                            audioLength = fifthModAudLent, nBatch = batchSize
-                        )
-                    }!!
-//                val differs = listOf(a1, a2, a3, a4, a5)
+                val a5 = lifecycleScope.launch {
+                    resultFifth =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = fifthModelName, data = it1,
+                                audioLength = fifthModAudLent, nBatch = batchSize
+                            )
+                        }!!
+                }
+//                resultFifth =
+//                    audioData?.get(0)?.let { it1 ->
+//                        makePrediction(assets,
+//                            modelName = fifthModelName, data = it1,
+//                            audioLength = fifthModAudLent, nBatch = batchSize
+//                        )
+//                    }!!
+                val differs = listOf(a1, a2, a3, a4, a5)
 //                differs.add(a1)
 //                differs.add(a2 as Deferred<Unit>)
 //                differs.add(a3 as Deferred<Unit>)
 //                differs.add(a4 as Deferred<Unit>)
 //                differs.add(a5 as Deferred<Unit>)
 
-//                runBlocking {
-//                    Log.d("ssss", "start thread logic")
-//                    differs.awaitAll()
-//
-//                    Log.d("ssss", "end thread logic")
-//                }
+                runBlocking {
+                    Log.d("ssss", "start thread logic")
+                    differs//.awaitAll()
+
+                    Log.d("ssss", "end thread logic")
+                }
                 Log.d("ssss", "start ui logic")
                 val recFilter = RecognitionFilter()
 //                val firstModRecFilter = recFilter.(resultFirst)

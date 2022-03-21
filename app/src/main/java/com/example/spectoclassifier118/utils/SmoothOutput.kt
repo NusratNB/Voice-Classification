@@ -10,7 +10,7 @@ class SmoothOutput(nFrames: Int) {
 
     fun transposeOutput(numFrames: Int, data: Array<FloatArray>): Array<FloatArray> {
         nFrames = numFrames
-        val nClasses = data[0].size
+        val nClasses = 7// data[0].size
         transpose = Array(nClasses){FloatArray(nFrames)}
         for (i in 0 until nFrames){
             for (j in 0 until nClasses){

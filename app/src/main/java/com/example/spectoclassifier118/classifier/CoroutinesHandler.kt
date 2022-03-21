@@ -136,6 +136,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
 //            Log.d("Outputs ", audioClip.floatArray.size.toString())
 //            Log.d("sliced data size", slicedData.size.toString())
+
             val sliceOutput = Array(nBatchSize){FloatArray(7)}
 //            for (bb in audioClip.floatArray.indices){
 //                Log.d("FloatOut", audioClip.floatArray[bb].toString())
@@ -143,27 +144,31 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
             for(i in 0 until nBatchSize) {
                 sliceOutput[i] =
                     audioClip.floatArray.slice(i * 7 until (i + 1) * 7).toFloatArray()
+                Log.d("sliceOutputtt $s", sliceOutput[i].joinToString(" "))
             }
+
             batchedOutput[s] = sliceOutput
 
             for (k in audioClip.floatArray.indices){
                 val kk = audioClip.floatArray[k]
                 Log.d("audioClip elements $k", "$kk $MODEL_NAME")
             }
+//            tfLite?.close()
         }
-        val indOut = 0
+        var indOut = 0
         val fullOut = Array(nPredictions*nBatchSize){FloatArray(7)}
         var ddd = 0
-//        for (i in 0 until nPredictions){
-//            for (j in 0 until nBatchSize){
-//                fullOut[indOut]=batchedOutput[i][j]
-//                for (k in 0 until 7){
-//                    Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
-//                    ddd += 1
-//                }
-//
-//            }
-//        }
+        for (i in 0 until nPredictions){
+            for (j in 0 until nBatchSize){
+                fullOut[indOut]=batchedOutput[i][j]
+                indOut += 1
+                for (k in 0 until 7){
+                    Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
+                    ddd += 1
+                }
+
+            }
+        }
 //        for (ss in fullOut.indices){
 //            val indd = fullOut[ss]
 //            for (kk in indd.indices){
@@ -191,6 +196,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         inferenceTime = (endTime - startTime).toFloat()
         numFrames = 1
 //        model.close()
+
 
         return fullOut
 

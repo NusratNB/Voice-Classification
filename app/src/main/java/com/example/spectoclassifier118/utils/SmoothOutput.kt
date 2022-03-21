@@ -23,7 +23,7 @@ class SmoothOutput(nFrames: Int) {
 
     fun smoothData(data: Array<FloatArray>): Array<FloatArray> {
         nFrames = data.size
-        val nClasses = data[0].size
+        val nClasses = 7 //data[0].size
         val transposedData = transposeOutput(nFrames, data)
         val wSmooth = 10
         val wMax = 100
@@ -49,11 +49,11 @@ class SmoothOutput(nFrames: Int) {
         val sum = summation(hSmooth, probs, j)
         val smoothFactor = (1.0/(j.toFloat()-hSmooth.toFloat()+1.0)).toFloat()
         val pHat = smoothFactor*sum
-        Log.d("This is pHat", pHat.toString())
-        Log.d("This is hSmooth", hSmooth.toString())
-        Log.d("This is summation", sum.toString())
-        Log.d("This is j ", j.toString())
-        Log.d("This is smoothFactor ", smoothFactor.toString())
+//        Log.d("This is pHat", pHat.toString())
+//        Log.d("This is hSmooth", hSmooth.toString())
+//        Log.d("This is summation", sum.toString())
+//        Log.d("This is j ", j.toString())
+//        Log.d("This is smoothFactor ", smoothFactor.toString())
         return pHat
     }
 

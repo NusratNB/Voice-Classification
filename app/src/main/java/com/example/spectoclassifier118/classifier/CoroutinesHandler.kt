@@ -22,7 +22,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
     lateinit var testSlicedData: Array<FloatArray>
     lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
-    private val nFFT: Int = 160
+    private val nFFT: Int = 320
     private var numFrames: Int = 0
     private var inputAudioLength: Int = 0
     private var nBatchSize: Int = 1
@@ -62,7 +62,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         val currentAudioLength = data.size
 
         if(currentAudioLength > inputAudioLength){
-            numFrames = (currentAudioLength - inputAudioLength) / nFFT
+            numFrames = (currentAudioLength - inputAudioLength) / nFFT - 1
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
             Log.d("handleAudio: numFrames", numFrames.toString())
             Log.d("handleAudio: inputAudioLength", inputAudioLength.toString())
@@ -71,6 +71,8 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
 
+            //slicedata[0] = 0..12240
+            //slicedata[1] = 160..12240+160
         }else if (currentAudioLength == inputAudioLength){
             numFrames = 1
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}

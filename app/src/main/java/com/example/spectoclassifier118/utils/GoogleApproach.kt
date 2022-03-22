@@ -39,11 +39,13 @@ class RecognitionFilter() {
         for (i in smoothedData.indices){
             googlePh[i] = (smoothedData[i].average().toFloat())
         }
+        Log.d("googlePh size", googlePh.size.toString())
         val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}
+        Log.d("googlePh array", googlePh.joinToString(" "))
+        Log.d("googleMaxId size", googleMaxId.toString())
         var googleClProb = googlePh[googleMaxId!!]*100.0
         googleClProb = String.format("%.2f", googleClProb).toDouble()
         googleClsName = listOfClasses[googleMaxId]
-        Log.d("googleClProb", googleClProb.toString())
 
         return googleClProb
     }
@@ -57,14 +59,12 @@ class RecognitionFilter() {
         val transposedData = smOut.transposeOutput(res.size, res)
         for (i in transposedData.indices){
             customPh[i] = (transposedData[i].average()).toFloat()
-            Log.d("customPh[$i]", transposedData[i].joinToString(" "))
         }
         customMaxId =
             customPh.maxOrNull()?.let { it1 -> customPh.indexOfFirst { it == it1 } }!!
         var customClProb = customPh[customMaxId]*100.0
         customClProb = String.format("%.2f", customClProb).toDouble()
         customClsName = listOfClasses[customMaxId]
-        Log.d("customClProb", customClProb.toString())
         return customClProb
     }
 

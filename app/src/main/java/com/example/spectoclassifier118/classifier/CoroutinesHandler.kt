@@ -20,6 +20,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
 
     lateinit var testSlicedData: Array<FloatArray>
+    lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 160
     private var numFrames: Int = 0
@@ -60,18 +61,13 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
         val currentAudioLength = data.size
 
-        if (currentAudioLength> inputAudioLength){
+        if(currentAudioLength > inputAudioLength){
             numFrames = (currentAudioLength - inputAudioLength) / nFFT
             slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-//            Log.d("handleAudio: numFrames", numFrames.toString())
-//            Log.d("handleAudio: inputAudioLength", inputAudioLength.toString())
-//            Log.d("handleAudio: currentAudioLength", currentAudioLength.toString())
+            Log.d("handleAudio: numFrames", numFrames.toString())
+            Log.d("handleAudio: inputAudioLength", inputAudioLength.toString())
+            Log.d("handleAudio: currentAudioLength", currentAudioLength.toString())
             for (i in 0 until (numFrames)){
-//                Log.d("handleAudio: numFrames nFFT", numFrames.toString())
-//                Log.d("handleAudio: inputAudioLength nFFT", inputAudioLength.toString())
-//                Log.d("handleAudio: currentAudioLength nFFT", currentAudioLength.toString())
-//                Log.d("i*nFFT", (i*nFFT).toString())
-//                Log.d("inputAudioLength + i*nFFT)", (inputAudioLength + i*nFFT).toString())
                 slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
             }
 
@@ -100,12 +96,9 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         val tfLite: Interpreter? = getModel(activity, MODEL_NAME)
         tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
         nPredictions = numFrames/nBatchSize
-//        Log.d("batchedData nPredictions", nPredictions.toString())
-//        Log.d("batchedData numFrames", numFrames.toString())
 
 
         val startTime = System.currentTimeMillis()
-        val finalResult = Array(numFrames){FloatArray(7)}
         var outputs: Unit? = null
         val batchedData = Array(nPredictions){Array(7){FloatArray(inputAudioLength)} }
 
@@ -134,70 +127,28 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
 
             outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
-//            Log.d("Outputs ", audioClip.floatArray.size.toString())
-//            Log.d("sliced data size", slicedData.size.toString())
 
             val sliceOutput = Array(nBatchSize){FloatArray(7)}
-//            for (bb in audioClip.floatArray.indices){
-//                Log.d("FloatOut", audioClip.floatArray[bb].toString())
-//            }
             for(i in 0 until nBatchSize) {
                 sliceOutput[i] =
                     audioClip.floatArray.slice(i * 7 until (i + 1) * 7).toFloatArray()
-                Log.d("sliceOutputtt $s", sliceOutput[i].joinToString(" "))
             }
 
             batchedOutput[s] = sliceOutput
-
-            for (k in audioClip.floatArray.indices){
-                val kk = audioClip.floatArray[k]
-                Log.d("audioClip elements $k", "$kk $MODEL_NAME")
-            }
-//            tfLite?.close()
         }
         var indOut = 0
         val fullOut = Array(nPredictions*nBatchSize){FloatArray(7)}
-        var ddd = 0
         for (i in 0 until nPredictions){
             for (j in 0 until nBatchSize){
                 fullOut[indOut]=batchedOutput[i][j]
                 indOut += 1
-                for (k in 0 until 7){
-                    Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
-                    ddd += 1
-                }
-
             }
         }
-//        for (ss in fullOut.indices){
-//            val indd = fullOut[ss]
-//            for (kk in indd.indices){
-//                Log.d("fullOut $ss", indd[kk].toString())
-//            }
-//        }
-
-
-
-//        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
-//        byteBuffer.order(ByteOrder.nativeOrder())
-//        for (i in slicedData.indices) {
-//            for (j in slicedData[i].indices){
-//                byteBuffer.putFloat(slicedData[i][j])
-//            }
-//        }
-//        val audioClip = TensorBuffer.createFixedSize(intArrayOf(numFrames, inputAudioLength), DataType.FLOAT32)
-//        audioClip.loadBuffer(byteBuffer)
-//
-//        val outputs = model.process(audioClip)
-//        probability = outputs.probabilityAsTensorBuffer
-
 
         val endTime = System.currentTimeMillis()
         inferenceTime = (endTime - startTime).toFloat()
         numFrames = 1
-//        model.close()
-
-
+        tfLite?.close()
         return fullOut
 
     }

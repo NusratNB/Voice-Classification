@@ -133,6 +133,7 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+
     @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -196,36 +197,48 @@ class MainActivity : AppCompatActivity() {
                 val startTime = SystemClock.uptimeMillis()
 
 
-//                lifecycleScope.launch{
+//                GlobalScope.async(Dispatchers.Default) {
 //                    resultFirst =
 //                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction( assets,
+//                            makePrediction(
+//                                assets,
 //                                modelName = firstModelName, data = it1,
 //                                audioLength = firstModAudLength, nBatch = batchSize
 //                            )
 //                        }!!
+//                }
+//                GlobalScope.async(Dispatchers.Default) {
 //                    resultSecond =
 //                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
+//                            makePrediction(
+//                                assets,
 //                                modelName = secondModelName, data = it1,
 //                                audioLength = secModAudLength, nBatch = batchSize
 //                            )
 //                        }!!
+//                }
 //
+//                GlobalScope.async(Dispatchers.Default) {
 //                    resultThird =
 //                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
+//                            makePrediction(
+//                                assets,
 //                                modelName = thirdModelName, data = it1,
 //                                audioLength = thirdModAudLength, nBatch = batchSize
 //                            )
 //                        }!!
+//                }
+//                GlobalScope.async(Dispatchers.Default) {
 //                    resultFourth =
 //                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
+//                            makePrediction(
+//                                assets,
 //                                modelName = fourthModelName, data = it1,
 //                                audioLength = fourthModAudLength, nBatch = batchSize
 //                            )
 //                        }!!
+//                }
+//                GlobalScope.async(Dispatchers.Default) {
 //                    resultFifth =
 //                        audioData?.get(0)?.let { it1 ->
 //                            makePrediction(assets,
@@ -236,7 +249,7 @@ class MainActivity : AppCompatActivity() {
 //                }
 //                val differs = mutableListOf<Deferred<T>>()
 
-                val a1 = lifecycleScope.launch{
+                val a1 = GlobalScope.async(Dispatchers.Default){
                     resultFirst =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction( assets,
@@ -245,16 +258,8 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-//                resultFirst =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction( assets,
-//                            modelName = firstModelName, data = it1,
-//                            audioLength = firstModAudLength, nBatch = batchSize
-//                        )
-//                    }!!
 
-
-                val a2 = lifecycleScope.launch{
+                val a2 = GlobalScope.async(Dispatchers.Default){
                     resultSecond =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -263,16 +268,8 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-//                resultSecond =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction(assets,
-//                            modelName = secondModelName, data = it1,
-//                            audioLength = secModAudLength, nBatch = batchSize
-//                        )
-//                    }!!
 
-
-                val a3 = lifecycleScope.launch {
+                val a3 = GlobalScope.async(Dispatchers.Default) {
                     resultThird =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -281,19 +278,7 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-//                resultThird =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction(assets,
-//                            modelName = thirdModelName, data = it1,
-//                            audioLength = thirdModAudLength, nBatch = batchSize
-//                        )
-//                    }!!
-
-
-
-
-
-                val a4 = lifecycleScope.launch {
+                val a4 = GlobalScope.async(Dispatchers.Default) {
                     resultFourth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -302,15 +287,8 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-//                resultFourth =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction(assets,
-//                            modelName = fourthModelName, data = it1,
-//                            audioLength = fourthModAudLength, nBatch = batchSize
-//                        )
-//                    }!!
 
-                val a5 = lifecycleScope.launch {
+                val a5 = GlobalScope.async(Dispatchers.Default) {
                     resultFifth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
@@ -319,70 +297,63 @@ class MainActivity : AppCompatActivity() {
                             )
                         }!!
                 }
-//                resultFifth =
-//                    audioData?.get(0)?.let { it1 ->
-//                        makePrediction(assets,
-//                            modelName = fifthModelName, data = it1,
-//                            audioLength = fifthModAudLent, nBatch = batchSize
-//                        )
-//                    }!!
-                val differs = listOf(a1, a2, a3, a4, a5)
+
+
 //                differs.add(a1)
 //                differs.add(a2 as Deferred<Unit>)
 //                differs.add(a3 as Deferred<Unit>)
 //                differs.add(a4 as Deferred<Unit>)
 //                differs.add(a5 as Deferred<Unit>)
 
-                runBlocking {
-                    Log.d("ssss", "start thread logic")
-                    differs//.awaitAll()
 
-                    Log.d("ssss", "end thread logic")
-                }
+//                classifier.tfLite.close()
                 Log.d("ssss", "start ui logic")
-                val recFilter = RecognitionFilter()
-//                val firstModRecFilter = recFilter.(resultFirst)
-//                val secModRecFilter = RecognitionFilter(resultSecond)
-//                val thirdModRecFilter = RecognitionFilter(resultThird)
-//                val fourthModRecFilter = RecognitionFilter(resultFourth)
-//                val fifthModRecFilter = RecognitionFilter(resultFifth)
+                GlobalScope.launch(Dispatchers.Main) {
+                    val differs = listOf(a1, a2, a3, a4, a5)
+                    runBlocking {
+                        Log.d("ssss", "start thread logic")
+                        differs.awaitAll()
 
-                firstModGoogProb = recFilter.googleApproach(resultFirst).toFloat()
-                Log.d("firstModGoogProb", firstModGoogProb.toString())
-                firstModGoogClsName = recFilter.googleClsName
+                        Log.d("ssss", "end thread logic")
+                    }
+                    val recFilter = RecognitionFilter()
 
-                secModGoogProb = recFilter.googleApproach(resultSecond).toFloat()
-                secModGoogClsName = recFilter.googleClsName
+                    firstModGoogProb = recFilter.googleApproach(resultFirst).toFloat()
+                    Log.d("firstModGoogProb", firstModGoogProb.toString())
+                    firstModGoogClsName = recFilter.googleClsName
 
-                thirdModGoogProb = recFilter.googleApproach(resultThird).toFloat()
-                thirdModGoogClsName = recFilter.googleClsName
+                    secModGoogProb = recFilter.googleApproach(resultSecond).toFloat()
+                    secModGoogClsName = recFilter.googleClsName
 
-                fourthModGoogProb = recFilter.googleApproach(resultFourth).toFloat()
-                fourthModGoogClsName = recFilter.googleClsName
+                    thirdModGoogProb = recFilter.googleApproach(resultThird).toFloat()
+                    thirdModGoogClsName = recFilter.googleClsName
 
-                fifthModGoogProb = recFilter.googleApproach(resultFifth).toFloat()
-                fifthModGoogClsName = recFilter.googleClsName
+                    fourthModGoogProb = recFilter.googleApproach(resultFourth).toFloat()
+                    fourthModGoogClsName = recFilter.googleClsName
 
-                firstModAveProb = recFilter.takeAverage(resultFirst).toFloat()
-                firstModAveClsName = recFilter.customClsName
+                    fifthModGoogProb = recFilter.googleApproach(resultFifth).toFloat()
+                    fifthModGoogClsName = recFilter.googleClsName
 
-                secModAveProb = recFilter.takeAverage(resultSecond).toFloat()
-                secModAveClsName = recFilter.customClsName
+                    firstModAveProb = recFilter.takeAverage(resultFirst).toFloat()
+                    firstModAveClsName = recFilter.customClsName
 
-                thirdModAveProb = recFilter.takeAverage(resultThird).toFloat()
-                thirdModAveClsName = recFilter.customClsName
+                    secModAveProb = recFilter.takeAverage(resultSecond).toFloat()
+                    secModAveClsName = recFilter.customClsName
 
-                fourthModAveProb = recFilter.takeAverage(resultFourth).toFloat()
-                fourthModAveClsName = recFilter.customClsName
+                    thirdModAveProb = recFilter.takeAverage(resultThird).toFloat()
+                    thirdModAveClsName = recFilter.customClsName
 
-                fifthModAveProb = recFilter.takeAverage(resultFifth).toFloat()
-                fifthModAveClsName = recFilter.customClsName
+                    fourthModAveProb = recFilter.takeAverage(resultFourth).toFloat()
+                    fourthModAveClsName = recFilter.customClsName
 
-                firstModTxt.text = "1-M GProb: $firstModGoogProb GCl: $firstModGoogClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
-                secondModTxt.text = "2-M GProb: $secModGoogProb GCl: $secModGoogClsName AProb: $secModAveProb ACl: $secModAveClsName"
-                thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
-                fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
-                fifthModTxt.text = "5-M GProb: $fifthModGoogProb GCl: $fifthModGoogClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
+                    fifthModAveProb = recFilter.takeAverage(resultFifth).toFloat()
+                    fifthModAveClsName = recFilter.customClsName
+
+                    firstModTxt.text = "1-M GProb: $firstModGoogProb GCl: $firstModGoogClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
+                    secondModTxt.text = "2-M GProb: $secModGoogProb GCl: $secModGoogClsName AProb: $secModAveProb ACl: $secModAveClsName"
+                    thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
+                    fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
+                    fifthModTxt.text = "5-M GProb: $fifthModGoogProb GCl: $fifthModGoogClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
 
 //                val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
 //                val csvName = csvNamePath.substring(csvNamePath.lastIndexOf("/") +1 )
@@ -393,12 +364,14 @@ class MainActivity : AppCompatActivity() {
 //                }
 
 //                Toast.makeText(this, "CSV file $csvName", Toast.LENGTH_SHORT).show()
-                val endTime = SystemClock.uptimeMillis()
-                inferenceTime = ((endTime - startTime).toFloat())/1000.0f
-                infTimeTxt.text = "Prediction time: $inferenceTime s."
+                    val endTime = SystemClock.uptimeMillis()
+                    inferenceTime = ((endTime - startTime).toFloat())/1000.0f
+                    infTimeTxt.text = "Prediction time: $inferenceTime s."
 
 
-                prevFileName = fileName
+                    prevFileName = fileName
+                }
+
             } else{
                 Toast.makeText(this, "Record doesn't exists, please record your voice", Toast.LENGTH_SHORT).show()
             }
@@ -412,8 +385,23 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+//    fun getFirstResult(audioData: Array<FloatArray>?){
+//        resultFirst =
+//            audioData?.get(0)?.let { it1 ->
+//                makePrediction(
+//                    assets,
+//                    modelName = firstModelName, data = it1,
+//                    audioLength = firstModAudLength, nBatch = batchSize
+//                )
+//            }!!
+//    }
 
-    private fun makePrediction(
+    fun getSecondResult(audioData: Array<FloatArray>?){
+
+
+    }
+
+    private suspend fun makePrediction(
         activity: AssetManager,
         modelName: String,
         data: FloatArray,
@@ -422,14 +410,37 @@ class MainActivity : AppCompatActivity() {
     ): Array<FloatArray> {
         var resultData: Array<FloatArray> = emptyArray<FloatArray>()
 
-//        withContext(Dispatchers.Default){
+        GlobalScope.launch {
             classifier.initAudioLength(audioLength)
             classifier.initModelName(modelName)
             classifier.initBatchSize(nBatch)
             resultData = data.let { classifier.makeInference(activity,it) }
-//        }
+
+        }
         return resultData
     }
+
+
+//    private suspend fun makePrediction(
+//        activity: AssetManager,
+//        modelName: String,
+//        data: FloatArray,
+//        audioLength: Int,
+//        nBatch: Int
+//    ): Array<FloatArray> {
+//        var resultData: Array<FloatArray>
+//
+//
+//            withContext(Dispatchers.Default){
+//                classifier.initAudioLength(audioLength)
+//                classifier.initModelName(modelName)
+//                classifier.initBatchSize(nBatch)
+//                resultData = data.let { classifier.makeInference(activity,it) }
+//
+//        }
+//
+//        return resultData
+//    }
 
 
 

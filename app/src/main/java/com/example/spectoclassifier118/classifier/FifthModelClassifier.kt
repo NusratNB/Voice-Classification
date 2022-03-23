@@ -97,6 +97,8 @@ class FifthModelClassifier {
         val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
 
         val tfLite: Interpreter? = getModel(activity, modName)
+
+
         tfLite?.resizeInput(0, intArrayOf(nBatchSize, inpAudioLength))
 
 

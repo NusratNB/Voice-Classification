@@ -33,11 +33,15 @@ class RecognitionFilter() {
 
         val googlePh = FloatArray(numClasses)
         Log.d("nFrames", res.size.toString())
-        val nFrames = res.size
+        var nFrames = res.size
+        if (nFrames == 0){
+            nFrames = 1
+        }
         val smOut = SmoothOutput(nFrames)
         val smoothedData = smOut.smoothData(res)
         for (i in smoothedData.indices){
             googlePh[i] = (smoothedData[i].average().toFloat())
+            Log.d("smoothedData array $i", smoothedData[i].joinToString(" "))
         }
         Log.d("googlePh size", googlePh.size.toString())
         val googleMaxId =  googlePh.maxOrNull()?.let { it1 -> googlePh.indexOfFirst { it == it1 }}

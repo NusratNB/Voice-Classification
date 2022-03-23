@@ -15,11 +15,10 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
+class ThirdModelClassifier {
 
-class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
-
-//    lateinit var testSlicedData: Array<FloatArray>
+    //    lateinit var testSlicedData: Array<FloatArray>
     lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 320
@@ -158,6 +157,4 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         return fullOut
 
     }
-
-
 }

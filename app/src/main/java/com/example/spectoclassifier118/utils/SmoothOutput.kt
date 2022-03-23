@@ -1,6 +1,6 @@
 package com.example.spectoclassifier118.utils
 
-import android.util.Log
+
 import kotlin.math.max
 
 class SmoothOutput(nFrames: Int) {

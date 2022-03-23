@@ -1,7 +1,6 @@
 package com.example.spectoclassifier118.classifier
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.util.Log
@@ -15,11 +14,10 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
+class FifthModelClassifier {
 
-class CoroutinesHandler(ctx: Context, activity: AssetManager){
 
-
-//    lateinit var testSlicedData: Array<FloatArray>
+    //    lateinit var testSlicedData: Array<FloatArray>
     lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 320
@@ -40,7 +38,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
-    private fun getModel(activity: AssetManager,modelPath: String): Interpreter? {
+    private fun getModel(activity: AssetManager, modelPath: String): Interpreter? {
         return loadModelFile(activity, modelPath)?.let { Interpreter(it) }
     }
 
@@ -95,7 +93,7 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
     }
 
     @SuppressLint("LongLogTag")
-    fun makeInference(activity: AssetManager,data: FloatArray, inpAudioLength: Int, modName: String): Array<FloatArray> {
+    fun makeInference(activity: AssetManager, data: FloatArray, inpAudioLength: Int, modName: String): Array<FloatArray> {
         val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
 
         val tfLite: Interpreter? = getModel(activity, modName)
@@ -158,6 +156,5 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
         return fullOut
 
     }
-
 
 }

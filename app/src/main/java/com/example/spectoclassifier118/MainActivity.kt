@@ -14,20 +14,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.spectoclassifier118.classifier.ClassifierAlt
-import com.example.spectoclassifier118.spectoimage.SpectrogramGenerator
 import com.example.spectoclassifier118.classifier.CoroutinesHandler
+import com.example.spectoclassifier118.classifier.FirstModelClassifier
+import com.example.spectoclassifier118.classifier.SecondModelClassifier
+import com.example.spectoclassifier118.classifier.ThirdModelClassifier
+import com.example.spectoclassifier118.classifier.FourthModelClassifier
+import com.example.spectoclassifier118.classifier.FifthModelClassifier
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.lifecycleScope
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
 import com.example.spectoclassifier118.wavreader.WavFile
 import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
 import com.example.spectoclassifier118.wavreader.WavFileException
-import com.example.spectoclassifier118.utils.GenerateCSV
-import com.example.spectoclassifier118.utils.SmoothOutput
 import com.example.spectoclassifier118.utils.RecognitionFilter
 import kotlinx.coroutines.*
 import java.io.IOException
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private val secModAudLength: Int = 5010
     private val thirdModAudLength: Int = 8640
     private val fourthModAudLength: Int = 12240
-    private val fifthModAudLent: Int = 15900
+    private val fifthModAudLength: Int = 15900
 
     private var firstModGoogProb: Float = 0.0f
     private var secModGoogProb: Float = 0.0f
@@ -101,6 +101,12 @@ class MainActivity : AppCompatActivity() {
     private var fifthModAveClsName: String = ""
 
     private val batchSize: Int = 16
+
+    private val firstClassifier: FirstModelClassifier = FirstModelClassifier()
+    private val secondClassifier: SecondModelClassifier = SecondModelClassifier()
+    private val thirdClassifier: ThirdModelClassifier = ThirdModelClassifier()
+    private val fourthClassifier: FourthModelClassifier = FourthModelClassifier()
+    private val fifthClassifier: FifthModelClassifier = FifthModelClassifier()
 
 
 
@@ -269,34 +275,36 @@ class MainActivity : AppCompatActivity() {
 //                        }!!
 //                }
 //
-//                val a3 = GlobalScope.async(Dispatchers.IO) {
-//                    resultThird =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = thirdModelName, data = it1,
-//                                audioLength = thirdModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-//                val a4 = GlobalScope.async(Dispatchers.IO) {
-//                    resultFourth =
-//                        audioData?.get(0)?.let { it1 ->
-//                            makePrediction(assets,
-//                                modelName = fourthModelName, data = it1,
-//                                audioLength = fourthModAudLength, nBatch = batchSize
-//                            )
-//                        }!!
-//                }
-//
-                val a5 = GlobalScope.async(Dispatchers.IO) {
+                val a3 = GlobalScope.async(Dispatchers.Default) {
+                    resultThird =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = thirdModelName, data = it1,
+                                audioLength = thirdModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+
+                val a5 = GlobalScope.async(Dispatchers.Default) {
                     resultFifth =
                         audioData?.get(0)?.let { it1 ->
                             makePrediction(assets,
                                 modelName = fifthModelName, data = it1,
-                                audioLength = fifthModAudLent, nBatch = batchSize
+                                audioLength = fifthModAudLength, nBatch = batchSize
                             )
                         }!!
                 }
+                val a4 = GlobalScope.async(Dispatchers.Default) {
+                    resultFourth =
+                        audioData?.get(0)?.let { it1 ->
+                            makePrediction(assets,
+                                modelName = fourthModelName, data = it1,
+                                audioLength = fourthModAudLength, nBatch = batchSize
+                            )
+                        }!!
+                }
+//
+
 
 
 //                differs.add(a1)
@@ -309,7 +317,7 @@ class MainActivity : AppCompatActivity() {
 //                classifier.tfLite.close()
                 Log.d("ssss", "start ui logic")
                 GlobalScope.launch(Dispatchers.Main) {
-                    val differs = listOf(a5)
+                    val differs = listOf(a3, a5, a4 )
                     runBlocking {
                         Log.d("ssss", "start thread logic")
                         differs.awaitAll()
@@ -325,11 +333,11 @@ class MainActivity : AppCompatActivity() {
 //                    secModGoogProb = recFilter.googleApproach(resultSecond).toFloat()
 //                    secModGoogClsName = recFilter.googleClsName
 //
-//                    thirdModGoogProb = recFilter.googleApproach(resultThird).toFloat()
-//                    thirdModGoogClsName = recFilter.googleClsName
-//
-//                    fourthModGoogProb = recFilter.googleApproach(resultFourth).toFloat()
-//                    fourthModGoogClsName = recFilter.googleClsName
+                    thirdModGoogProb = recFilter.googleApproach(resultThird).toFloat()
+                    thirdModGoogClsName = recFilter.googleClsName
+
+                    fourthModGoogProb = recFilter.googleApproach(resultFourth).toFloat()
+                    fourthModGoogClsName = recFilter.googleClsName
 //
                     fifthModGoogProb = recFilter.googleApproach(resultFifth).toFloat()
                     fifthModGoogClsName = recFilter.googleClsName
@@ -340,19 +348,19 @@ class MainActivity : AppCompatActivity() {
 //                    secModAveProb = recFilter.takeAverage(resultSecond).toFloat()
 //                    secModAveClsName = recFilter.customClsName
 //
-//                    thirdModAveProb = recFilter.takeAverage(resultThird).toFloat()
-//                    thirdModAveClsName = recFilter.customClsName
-//
-//                    fourthModAveProb = recFilter.takeAverage(resultFourth).toFloat()
-//                    fourthModAveClsName = recFilter.customClsName
+                    thirdModAveProb = recFilter.takeAverage(resultThird).toFloat()
+                    thirdModAveClsName = recFilter.customClsName
+
+                    fourthModAveProb = recFilter.takeAverage(resultFourth).toFloat()
+                    fourthModAveClsName = recFilter.customClsName
 //
                     fifthModAveProb = recFilter.takeAverage(resultFifth).toFloat()
                     fifthModAveClsName = recFilter.customClsName
 
 //                    firstModTxt.text = "1-M GProb: $firstModGoogProb GCl: $firstModGoogClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
 //                    secondModTxt.text = "2-M GProb: $secModGoogProb GCl: $secModGoogClsName AProb: $secModAveProb ACl: $secModAveClsName"
-//                    thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
-//                    fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
+                    thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
+                    fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
                     fifthModTxt.text = "5-M GProb: $fifthModGoogProb GCl: $fifthModGoogClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
 
 //                val csvNamePath = fileName.toString().split(".wav")[0] + ".csv"
@@ -396,13 +404,37 @@ class MainActivity : AppCompatActivity() {
         var resultData: Array<FloatArray> = emptyArray<FloatArray>()
 
 //        GlobalScope.launch {
-        classifier.initAudioLength(audioLength)
-        classifier.initModelName(modelName)
-        classifier.initBatchSize(nBatch)
-        resultData = data.let { classifier.makeInference(activity,it) }
+//        classifier.initAudioLength(audioLength)
+//        classifier.initModelName(modelName)
 
-//        }
+        if (modelName == firstModelName){
+            var resultDataFirst: Array<FloatArray> = emptyArray<FloatArray>()
+            firstClassifier.initBatchSize(nBatch)
+            resultDataFirst = data.let { firstClassifier.makeInference(activity,it, audioLength, modelName) }
+            resultData = resultDataFirst
+        } else if (modelName == secondModelName){
+            var resultDataSecond: Array<FloatArray> = emptyArray<FloatArray>()
+            secondClassifier.initBatchSize(nBatch)
+            resultDataSecond = data.let { secondClassifier.makeInference(activity,it, audioLength, modelName) }
+            resultData = resultDataSecond
+        } else if (modelName == thirdModelName){
+            var resultDataThird: Array<FloatArray> = emptyArray<FloatArray>()
+            thirdClassifier.initBatchSize(nBatch)
+            resultDataThird = data.let { thirdClassifier.makeInference(activity,it, audioLength, modelName) }
+            resultData = resultDataThird
+        } else if (modelName == fourthModelName){
+            var resultDataFourth: Array<FloatArray> = emptyArray<FloatArray>()
+            fourthClassifier.initBatchSize(nBatch)
+            resultDataFourth = data.let { fourthClassifier.makeInference(activity,it, audioLength, modelName) }
+            resultData = resultDataFourth
+        } else if (modelName == fifthModelName){
+            var resultDataFifth: Array<FloatArray> = emptyArray<FloatArray>()
+            fifthClassifier.initBatchSize(nBatch)
+            resultDataFifth = data.let { fifthClassifier.makeInference(activity,it, audioLength, modelName) }
+            resultData = resultDataFifth
+        }
         return resultData
+
     }
 //    fun getFirstResult(audioData: Array<FloatArray>?){
 //        resultFirst =

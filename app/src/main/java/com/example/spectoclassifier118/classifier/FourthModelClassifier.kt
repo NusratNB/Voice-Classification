@@ -21,7 +21,7 @@ class FourthModelClassifier {
     //    lateinit var testSlicedData: Array<FloatArray>
     lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
-    private val nFFT: Int = 160
+    private val nFFT: Int = 320
     private var numFrames: Int = 0
     private var inputAudioLength: Int = 0
     private var nBatchSize: Int = 1
@@ -51,7 +51,7 @@ class FourthModelClassifier {
         lateinit var slicedData: Array<FloatArray>
 
         val currentAudioLength = data.size
-        var localNumPredictions = 1
+        var localNumPredictions = 0
         var localNumFrames = 1
 
         if(currentAudioLength > inAudioLength){
@@ -83,8 +83,13 @@ class FourthModelClassifier {
 
     @SuppressLint("LongLogTag")
     fun makeInference(activity: AssetManager, data: FloatArray, inpAudioLength: Int, modName: String): Array<FloatArray> {
-        val localBatchSize: Int
+        var localBatchSize: Int = 1
         var (slicedData, locNumPredictions, tempNumFrames) = handleAudioLength(data, inpAudioLength)
+        Log.d("fourthMod tempNumFrames", tempNumFrames.toString())
+        Log.d("fourthMod localBatchSize", localBatchSize.toString())
+        Log.d("fourthMod before locNumPredictions", locNumPredictions.toString())
+        Log.d("fourthMod slicedData", slicedData.size.toString())
+
 
         if (locNumPredictions == 0){
             localBatchSize = tempNumFrames
@@ -96,6 +101,7 @@ class FourthModelClassifier {
         } else{
             localBatchSize = nBatchSize
         }
+        Log.d("fourthMod afff localBatchSize", localBatchSize.toString())
 
         val tfLite: Interpreter? = getModel(activity, modName)
 
@@ -106,11 +112,20 @@ class FourthModelClassifier {
 
         val startTime = System.currentTimeMillis()
         var outputs: Unit? = null
-        val batchedData = Array(locNumPredictions){Array(7){FloatArray(inpAudioLength)} }
+        val batchedData = Array(locNumPredictions){Array(localBatchSize){FloatArray(inpAudioLength)} }
 
-        for (i in 0 until locNumPredictions){
-            batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
+        if (locNumPredictions>1){
+            for (i in 0 until locNumPredictions){
+
+                batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
+                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
+            }
+        }else{
+            batchedData[0] = slicedData
+            Log.d("ffffff batchedData", batchedData.size.toString())
+            Log.d("ffffff batchedData[0]", batchedData[0].size.toString())
         }
+
         val batchedOutput = Array(locNumPredictions){Array(localBatchSize){FloatArray(7)} }
 
         for (s in 0 until locNumPredictions){
@@ -118,11 +133,23 @@ class FourthModelClassifier {
             val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(localBatchSize*4*inpAudioLength )
             byteBuffer.order(ByteOrder.nativeOrder())
             //            for (i in slicedData.indices) {
-            for (i in 0 until localBatchSize) {
-                for (j in testSlicedData[i].indices) {
-                    byteBuffer.putFloat(testSlicedData[i][j])
+            if (locNumPredictions>1){
+                for (i in 0 until localBatchSize) {
+                    Log.d("This is $i", i.toString())
+                    Log.d("testSlicedData.size", testSlicedData.size.toString())
+                    Log.d("testSlicedData[$i].size", testSlicedData[i].size.toString())
+                    for (j in testSlicedData[i].indices) {
+                        byteBuffer.putFloat(testSlicedData[i][j])
+                    }
+                }
+            } else{
+                for (i in 0 until localBatchSize) {
+                    for (j in testSlicedData[i].indices) {
+                        byteBuffer.putFloat(testSlicedData[i][j])
+                    }
                 }
             }
+
             val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(localBatchSize*4*7)
             outputByteBuffer.order(ByteOrder.nativeOrder())
             //            }

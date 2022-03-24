@@ -21,7 +21,7 @@ class SecondModelClassifier {
     //    lateinit var testSlicedData: Array<FloatArray>
     lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
-    private val nFFT: Int = 160
+    private val nFFT: Int = 320
     private var numFrames: Int = 0
     private var inputAudioLength: Int = 0
     private var nBatchSize: Int = 1
@@ -51,7 +51,7 @@ class SecondModelClassifier {
         lateinit var slicedData: Array<FloatArray>
 
         val currentAudioLength = data.size
-        var localNumPredictions = 1
+        var localNumPredictions = 0
         var localNumFrames = 1
 
         if(currentAudioLength > inAudioLength){
@@ -83,6 +83,7 @@ class SecondModelClassifier {
 
     @SuppressLint("LongLogTag")
     fun makeInference(activity: AssetManager, data: FloatArray, inpAudioLength: Int, modName: String): Array<FloatArray> {
+        val startTime = System.currentTimeMillis()
         val localBatchSize: Int
         var (slicedData, locNumPredictions, tempNumFrames) = handleAudioLength(data, inpAudioLength)
 
@@ -93,24 +94,28 @@ class SecondModelClassifier {
             Log.d("secMod before locNumPredictions", locNumPredictions.toString())
             locNumPredictions = 1
             Log.d("secMod after locNumPredictions", locNumPredictions.toString())
+
         } else{
             localBatchSize = nBatchSize
         }
 
+
         val tfLite: Interpreter? = getModel(activity, modName)
-
-
         tfLite?.resizeInput(0, intArrayOf(localBatchSize, inpAudioLength))
 
-
-
-        val startTime = System.currentTimeMillis()
         var outputs: Unit? = null
-        val batchedData = Array(locNumPredictions){Array(7){FloatArray(inpAudioLength)} }
+        val batchedData = Array(locNumPredictions){Array(localBatchSize){FloatArray(inpAudioLength)} }
 
-        for (i in 0 until locNumPredictions){
-            batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
+        if (locNumPredictions>1){
+            for (i in 0 until locNumPredictions){
+
+                batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
+                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
+            }
+        }else{
+            batchedData[0] = slicedData
         }
+
         val batchedOutput = Array(locNumPredictions){Array(localBatchSize){FloatArray(7)} }
 
         for (s in 0 until locNumPredictions){

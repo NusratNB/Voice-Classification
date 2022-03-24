@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     private var fourthModAveClsName: String = ""
     private var fifthModAveClsName: String = ""
 
-    private val batchSize: Int = 10
+    private val batchSize: Int = 32
 
     private val firstClassifier: FirstModelClassifier = FirstModelClassifier()
     private val secondClassifier: SecondModelClassifier = SecondModelClassifier()

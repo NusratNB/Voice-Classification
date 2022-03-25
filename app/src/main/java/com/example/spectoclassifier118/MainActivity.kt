@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         }
         val classes: Array<String> = arrayOf("고마워", "보고싶어", "빨리", "사랑해", "싫어", "아파", "짜증나")
 
-        var audioRecoder = RecordWavMaster(this, pathToRecords.toString())
+        val audioRecoder = RecordWavMaster(this, pathToRecords.toString())
         var recording: Boolean = true
         btnRecord = findViewById(R.id.btnRecord)
         btnRecord.text = "Start"

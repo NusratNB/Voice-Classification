@@ -72,41 +72,44 @@ class RecognitionFilter() {
         return customClProb
     }
 
-//    fun syntiantApproach(){
-//        //TODO 2.Apply Syntiant Approach here
-//
-//        val syntiantPhThresholdV1 = 85.0
-//        val syntiantPhThresholdV2 = 70.0
-//
-//        var countThV1 = 0
-//        var countThV2 = 0
-//        val consecutivePh = floor(nFrames*0.3).toInt()
-//        val dominantClass = so.transposeOutput(resultData.size, resultData)[customMaxId]
-//
-//        for(i in dominantClass.indices){
-//            val currentProb = dominantClass[i]*100.0
-//            Log.d("Dominant class probs: ", currentProb.toString())
-//            if (currentProb>syntiantPhThresholdV1){
-//                countThV1 +=1
-//                averageThresholdV1 += currentProb
-//            }
-//            if (currentProb>syntiantPhThresholdV2){
-//                countThV2 +=1
-//                averageThresholdV2 += currentProb
-//            }
-//        }
-//        if (countThV1>=consecutivePh){
-//            averageThresholdV1 /= countThV1
-//            averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-//
-//        }
-//        if (countThV2>=consecutivePh){
-//            averageThresholdV2 /= countThV2
-//            averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-//        }
-//    }
+    fun syntiantApproach(res: Array<FloatArray>){
+        //TODO 2.Apply Syntiant Approach here
 
+        val syntiantPhThresholdV1 = 85.0
+        val syntiantPhThresholdV2 = 70.0
+        val synNFrames = res.size
+        val so = SmoothOutput(synNFrames)
+        var countThV1 = 0
+        var countThV2 = 0
+        val consecutivePh = floor(synNFrames*0.3).toInt()
+        val dominantClass = so.transposeOutput(res.size, res)[customMaxId]
+        var scores = arrayOf(0, 0, 0, 0, 0, 0, 0)
+        var counts = arrayOf(0, 0, 0, 0, 0, 0, 0)
 
+        for (index in res.indices){
+            val currentProb = res[index]
+        }
 
+        for(i in dominantClass.indices){
+            val currentProb = dominantClass[i]*100.0
+            Log.d("Dominant class prob: ", currentProb.toString())
+            if (currentProb>syntiantPhThresholdV1){
+                countThV1 +=1
+                averageThresholdV1 += currentProb
+            }
+            if (currentProb>syntiantPhThresholdV2){
+                countThV2 +=1
+                averageThresholdV2 += currentProb
+            }
+        }
+        if (countThV1>=consecutivePh){
+            averageThresholdV1 /= countThV1
+            averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
 
+        }
+        if (countThV2>=consecutivePh){
+            averageThresholdV2 /= countThV2
+            averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
+        }
+    }
 }

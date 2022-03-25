@@ -83,12 +83,20 @@ class RecognitionFilter() {
         var countThV2 = 0
         val consecutivePh = floor(synNFrames*0.3).toInt()
         val dominantClass = so.transposeOutput(res.size, res)[customMaxId]
-        var scores = arrayOf(0, 0, 0, 0, 0, 0, 0)
-        var counts = arrayOf(0, 0, 0, 0, 0, 0, 0)
+        val scores = arrayOf(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f)
+        val counts = arrayOf(0, 0, 0, 0, 0, 0, 0)
 
         for (index in res.indices){
-            val currentProb = res[index]
+            val currentFrame = res[index]
+            for (i in listOfClasses.indices){
+                val currentProb = currentFrame[i]
+                if (currentProb>=syntiantPhThresholdV2){
+                    scores[i] = scores[i] + currentProb
+                    counts[i] = counts[i] + 1
+                }
+            }
         }
+
 
         for(i in dominantClass.indices){
             val currentProb = dominantClass[i]*100.0

@@ -1,5 +1,6 @@
 package com.example.spectoclassifier118.utils
 
+import android.annotation.SuppressLint
 import android.util.Log
 import kotlin.math.floor
 import kotlin.properties.Delegates
@@ -72,11 +73,12 @@ class RecognitionFilter {
         return customClProb
     }
 
+    @SuppressLint("LongLogTag")
     fun syntiantApproach(res: Array<FloatArray>): Pair<String, Float>{
         //TODO 2.Apply Syntiant Approach here
 
         val syntiantPhThresholdV1 = 85.0
-        val syntiantPhThresholdV2 = 70.0f
+        val syntiantPhThresholdV2 = 95.0f
         val consFramesThreshold = 5
         val synNFrames = res.size
         val so = SmoothOutput(synNFrames)
@@ -96,17 +98,15 @@ class RecognitionFilter {
 //                2 to 0, 3 to 0, 4 to 0, 5 to 0, 6 to 0)
             val currentFrame = res[index]
             for (i in listOfClasses.indices){
-                val currentProb = currentFrame[i]
+                val currentProb = currentFrame[i]*100.0f
                 if (currentProb>=syntiantPhThresholdV2){
                     scores[i] = scores[i] + currentProb
                     counts[i] = counts[i] + 1
-                    Log.d("syntiant counts[$i]: ", counts[i].toString())
 //                    isLastFrameAboveThreshold[i] = 1
                 }
             }
         }
         val maxVal = counts.maxOrNull() ?: 0
-        Log.d("syntiant maxVal: ", maxVal.toString())
         val maxIdx = counts.indexOf(counts.maxOrNull())
         if (maxVal > 0){
             resClass = listOfClasses[maxIdx]
@@ -114,27 +114,6 @@ class RecognitionFilter {
             resClassProbability = String.format("%.2f", resClassProbability).toFloat()
         }
 
-//        for(i in dominantClass.indices){
-//            val currentProb = dominantClass[i]*100.0
-//            Log.d("Dominant class prob: ", currentProb.toString())
-//            if (currentProb>syntiantPhThresholdV1){
-//                countThV1 +=1
-//                averageThresholdV1 += currentProb
-//            }
-//            if (currentProb>syntiantPhThresholdV2){
-//                countThV2 +=1
-//                averageThresholdV2 += currentProb
-//            }
-//        }
-//        if (countThV1>=consecutivePh){
-//            averageThresholdV1 /= countThV1
-//            averageThresholdV1 = String.format("%.2f", averageThresholdV1).toDouble()
-//
-//        }
-//        if (countThV2>=consecutivePh){
-//            averageThresholdV2 /= countThV2
-//            averageThresholdV2 = String.format("%.2f", averageThresholdV2).toDouble()
-//        }
         return Pair(resClass, resClassProbability)
     }
 

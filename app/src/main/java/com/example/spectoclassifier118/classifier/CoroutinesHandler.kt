@@ -68,9 +68,6 @@ class CoroutinesHandler(ctx: Context, activity: AssetManager){
                 localNumFrames =1
             }
             slicedData = Array(localNumFrames){FloatArray(inAudioLength)}
-            Log.d("handleAudio: numFrames", localNumFrames.toString())
-            Log.d("handleAudio: inputAudioLength", inAudioLength.toString())
-            Log.d("handleAudio: currentAudioLength", currentAudioLength.toString())
             for (i in 0 until (localNumFrames)){
                 slicedData[i] = data.slice(i*nFFT until inAudioLength + i*nFFT).toFloatArray()
             }

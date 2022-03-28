@@ -88,6 +88,12 @@ class MainActivity : AppCompatActivity() {
     private var fourthModAveProb: Float = 0.0f
     private var fifthModAveProb: Float = 0.0f
 
+    private var firstModSynProb: Float = 0.0f
+    private var secModSynProb: Float = 0.0f
+    private var thirdModSynProb: Float = 0.0f
+    private var fourthModSynProb: Float = 0.0f
+    private var fifthModSynProb: Float = 0.0f
+
     private var firstModGoogClsName: String = ""
     private var secModGoogClsName: String = ""
     private var thirdModGoogClsName: String = ""
@@ -99,6 +105,12 @@ class MainActivity : AppCompatActivity() {
     private var thirdModAveClsName: String = ""
     private var fourthModAveClsName: String = ""
     private var fifthModAveClsName: String = ""
+
+    private var firstModSynClsName: String = ""
+    private var secModSynClsName: String = ""
+    private var thirdModSynClsName: String = ""
+    private var fourthModSynClsName: String = ""
+    private var fifthModSynClsName: String = ""
 
     private val batchSize: Int = 32
 
@@ -292,11 +304,17 @@ class MainActivity : AppCompatActivity() {
                     fifthModAveProb = recFilter.takeAverage(resultFifth).toFloat()
                     fifthModAveClsName = recFilter.customClsName
 
-                    firstModTxt.text = "1-M GProb: $firstModGoogProb GCl: $firstModGoogClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
-                    secondModTxt.text = "2-M GProb: $secModGoogProb GCl: $secModGoogClsName AProb: $secModAveProb ACl: $secModAveClsName"
-                    thirdModTxt.text = "3-M GProb: $thirdModGoogProb GCl: $thirdModGoogClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
-                    fourthModTxt.text = "4-M GProb: $fourthModGoogProb GCl: $fourthModGoogClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
-                    fifthModTxt.text = "5-M GProb: $fifthModGoogProb GCl: $fifthModGoogClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
+                    val (firstModSynClsName, firstModSynProb) = recFilter.syntiantApproach(resultFirst)
+                    val (secondModSynClsName, secondModSynProb) = recFilter.syntiantApproach(resultSecond)
+                    val (thirdModSynClsName, thirdModSynProb) = recFilter.syntiantApproach(resultThird)
+                    val (fourthModSynClsName, fourthModSynProb) = recFilter.syntiantApproach(resultFourth)
+                    val (fifthModSynClsName, fifthModSynProb) = recFilter.syntiantApproach(resultFifth)
+
+                    firstModTxt.text = "1-M GProb: $firstModSynProb GCl: $firstModSynClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
+                    secondModTxt.text = "2-M GProb: $secondModSynProb GCl: $secondModSynClsName AProb: $secModAveProb ACl: $secModAveClsName"
+                    thirdModTxt.text = "3-M GProb: $thirdModSynProb GCl: $thirdModSynClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
+                    fourthModTxt.text = "4-M GProb: $fourthModSynProb GCl: $fourthModSynClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
+                    fifthModTxt.text = "5-M GProb: $fifthModSynProb GCl: $fifthModSynClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
                     val endTime = SystemClock.uptimeMillis()
                     inferenceTime = ((endTime - startTime).toFloat())/1000.0f
                     infTimeTxt.text = "Prediction time: $inferenceTime s."

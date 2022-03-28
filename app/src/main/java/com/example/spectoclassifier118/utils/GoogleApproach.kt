@@ -81,6 +81,7 @@ class RecognitionFilter {
         val syntiantPhThresholdV2 = 95.0f
         val consFramesThreshold = 5
         val synNFrames = res.size
+        Log.d("syntiant synNFrames", synNFrames.toString())
         val so = SmoothOutput(synNFrames)
         var countThV1 = 0
         var countThV2 = 0
@@ -107,14 +108,13 @@ class RecognitionFilter {
             }
         }
         val maxVal = counts.maxOrNull() ?: 0
+        Log.d("syntiant maxVal", maxVal.toString())
         val maxIdx = counts.indexOf(counts.maxOrNull())
-        if (maxVal > 0){
+        if (maxVal >= consecutivePh){
             resClass = listOfClasses[maxIdx]
             resClassProbability = scores[maxIdx]/maxVal.toFloat()
             resClassProbability = String.format("%.2f", resClassProbability).toFloat()
         }
-
         return Pair(resClass, resClassProbability)
     }
-
 }

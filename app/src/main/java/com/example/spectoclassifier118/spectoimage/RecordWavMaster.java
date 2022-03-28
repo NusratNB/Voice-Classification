@@ -48,8 +48,7 @@ public class RecordWavMaster {
     String fileNameAudio;
 
     private String RECORD_WAV_PATH; //= Environment.getExternalStorageDirectory() + File.separator + "AudioRecord";
-    short threshold=0;
-
+    short threshold=200;
     /* Initializing AudioRecording MIC */
     public RecordWavMaster(Context ctx,  String path) {
         initRecorder(ctx, path);
@@ -137,38 +136,6 @@ public class RecordWavMaster {
         }
 
 
-//            if (audioTrack == null) {
-//                audioTrack = new AudioTrack(
-//                        new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).setUsage(AudioAttributes.USAGE_MEDIA).build(),
-//                        new AudioFormat.Builder()
-//                                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-//                                .setSampleRate(SAMPLE_RATE)
-//                                .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-//                                .build(),
-//                        BUFFER_SIZE_PLAYING,
-//                        AudioTrack.MODE_STREAM,
-//                        AudioManager.AUDIO_SESSION_ID_GENERATE
-//                );
-//
-//                if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
-//                    Toast.makeText(ctx, "Couldn't initialize AudioTrack, check configuration", Toast.LENGTH_SHORT).show();
-//                    Log.e(TAG, "error initializing AudioTrack");
-//                    return;
-//                }
-//
-//                audioTrack.play();
-//                Log.d(TAG, "playback started with AudioTrack");
-//
-//                isPlayingAudio = true;
-//
-//                playingThread = new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        readAudioDataFromFile(ctx, fileName );
-//                    }
-//                });
-//                playingThread.start();
-//            }
         }
 //    }
 

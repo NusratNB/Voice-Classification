@@ -7,10 +7,6 @@ import kotlin.properties.Delegates
 
 class RecognitionFilter {
 
-//    private val resultData = data
-//    private val nFrames: Int = resultData.size
-//    private val so = SmoothOutput(nFrames)
-//    private val smoothedData = so.smoothData(resultData)
     private val listOfClasses = listOf("고마워", "보고싶어", "빨리", "사랑해", "싫어", "아파", "짜증나")
     private val numClasses: Int = listOfClasses.size
 
@@ -30,7 +26,6 @@ class RecognitionFilter {
 
 
     fun googleApproach(res: Array<FloatArray>): Double {
-        //TODO 1.Apply Googles Approach here
 
         val googlePh = FloatArray(numClasses)
         Log.d("nFrames", res.size.toString())
@@ -56,7 +51,6 @@ class RecognitionFilter {
     }
 
     fun takeAverage(res: Array<FloatArray>): Double{
-        //TODO 3.Take average
 
         val nFrames = res.size
         val smOut = SmoothOutput(nFrames)
@@ -75,7 +69,6 @@ class RecognitionFilter {
 
     @SuppressLint("LongLogTag")
     fun syntiantApproach(res: Array<FloatArray>): Pair<String, Float>{
-        //TODO 2.Apply Syntiant Approach here
 
         val syntiantPhThresholdV1 = 85.0
         val syntiantPhThresholdV2 = 95.0f
@@ -87,7 +80,7 @@ class RecognitionFilter {
         var countThV2 = 0
         var resClass = ""
         var resClassProbability = 0.0f
-        val consecutivePh = floor(synNFrames*0.3).toInt()
+        val consecutivePh = floor(synNFrames*0.8).toInt()
         val dominantClass = so.transposeOutput(res.size, res)[customMaxId]
         val scores = arrayOf(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f)
         val counts = arrayOf(0, 0, 0, 0, 0, 0, 0)

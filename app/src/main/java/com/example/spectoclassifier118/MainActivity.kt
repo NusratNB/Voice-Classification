@@ -197,9 +197,9 @@ class MainActivity : AppCompatActivity() {
                 recording = true
                 fileName = audioRecoder.audioName
                 fullAudioPath = File(fileName.toString()) //File(pathToRecords.toString(), fileName.toString())
-                if (prevFileName.exists()){
-                    prevFileName.delete()
-                }
+//                if (prevFileName.exists()){
+//                    prevFileName.delete()
+//                }
             }
 
         }

@@ -101,6 +101,17 @@ class ClassifierAlt{
         return Pair(slicedData, localNumFrames)
     }
 
+    fun transpose(data: Array<FloatArray>): Array<FloatArray> {
+        val transposedData = Array(data[0].size){FloatArray(data.size)}
+        for (i in data.indices){
+            for (j in data[0].indices){
+                transposedData[j][i] = data[i][j]
+            }
+        }
+        return transposedData
+
+    }
+
     @SuppressLint("LongLogTag")
     fun makeInference(
         activity: AssetManager,
@@ -125,19 +136,20 @@ class ClassifierAlt{
             val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4 * 7)
             outputByteBuffer.order(ByteOrder.nativeOrder())
             Log.d("locNumPredictions", locNumPredictions.toString())
-            for (i in mfccData.indices){
-                Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
-            }
+//            for (i in mfccData.indices){
+//                Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
+//            }
 
-//            Log.d("mfcc.size", mfccData.size.toString())
-//            Log.d("mfcc[0].size", mfccData[0].joinToString(" "))
+            Log.d("mfcc.size", mfccData.size.toString())
+            Log.d("mfcc[0].size", mfccData[0].size.toString())
+            val transposedMFCCs = transpose(mfccData)
 
 
-            val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * mfccData.size * (mfccData[0].size))
+            val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * transposedMFCCs.size * (transposedMFCCs[0].size))
             inputByteBuffer.order(ByteOrder.nativeOrder())
-            for (i in mfccData.indices){
-                for (j in (mfccData[0].indices)){
-                    inputByteBuffer.putFloat(mfccData[i][j])
+            for (i in transposedMFCCs.indices){
+                for (j in (transposedMFCCs[0].indices)){
+                    inputByteBuffer.putFloat(transposedMFCCs[i][j])
                 }
             }
 
@@ -145,7 +157,7 @@ class ClassifierAlt{
                 TensorBuffer.createFixedSize(intArrayOf(7), DataType.FLOAT32)
             audioClip.loadBuffer(outputByteBuffer)
             val inputData = TensorBuffer.createFixedSize(
-                intArrayOf(1, mfccData.size, mfccData[0].size),
+                intArrayOf(1, transposedMFCCs[0].size, transposedMFCCs.size),
                 DataType.FLOAT32
             )
             inputData.loadBuffer(inputByteBuffer)
@@ -159,52 +171,52 @@ class ClassifierAlt{
 
     }
 
-    fun makeInferenceAlt(
-        ctx: Context, data: FloatArray,
-        inpAudioLength: Int,): FloatArray {
-
-        val model = ModelNoPrePL.newInstance(ctx)
-//        var rawData = data?.get(0)
-        val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
-
-        mfccGenerator = LogMelSpecKt()
-        val currentData = slicedData[0]
-        val mfccData = mfccGenerator.getMFCC(currentData)
-
-//        val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, 100, 32), DataType.FLOAT32)
-        val output = Array(locNumPredictions) { FloatArray(7) }
-        val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4 * 7)
-        outputByteBuffer.order(ByteOrder.nativeOrder())
-        Log.d("locNumPredictions", locNumPredictions.toString())
+//    fun makeInferenceAlt(
+//        ctx: Context, data: FloatArray,
+//        inpAudioLength: Int,): FloatArray {
+//
+//        val model = ModelNoPrePL.newInstance(ctx)
+////        var rawData = data?.get(0)
+//        val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
+//
+//        mfccGenerator = LogMelSpecKt()
+//        val currentData = slicedData[0]
+//        val mfccData = mfccGenerator.getMFCC(currentData)
+//
+////        val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, 100, 32), DataType.FLOAT32)
+//        val output = Array(locNumPredictions) { FloatArray(7) }
+//        val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4 * 7)
+//        outputByteBuffer.order(ByteOrder.nativeOrder())
+//        Log.d("locNumPredictions", locNumPredictions.toString())
+////        for (i in mfccData.indices){
+////            Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
+////        }
+//
+////            Log.d("mfcc.size", mfccData.size.toString())
+////            Log.d("mfcc[0].size", mfccData[0].joinToString(" "))
+//
+//
+//        val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * mfccData.size * (mfccData[0].size))
+//        inputByteBuffer.order(ByteOrder.nativeOrder())
 //        for (i in mfccData.indices){
-//            Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
+//            for (j in (mfccData[0].indices)){
+//                inputByteBuffer.putFloat(mfccData[i][j])
+//            }
 //        }
-
-//            Log.d("mfcc.size", mfccData.size.toString())
-//            Log.d("mfcc[0].size", mfccData[0].joinToString(" "))
-
-
-        val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * mfccData.size * (mfccData[0].size))
-        inputByteBuffer.order(ByteOrder.nativeOrder())
-        for (i in mfccData.indices){
-            for (j in (mfccData[0].indices)){
-                inputByteBuffer.putFloat(mfccData[i][j])
-            }
-        }
-
-        val audioClip =
-            TensorBuffer.createFixedSize(intArrayOf(7), DataType.FLOAT32)
-        audioClip.loadBuffer(outputByteBuffer)
-        val inputData = TensorBuffer.createFixedSize(
-            intArrayOf(1, mfccData.size, mfccData[0].size),
-            DataType.FLOAT32
-        )
-        inputData.loadBuffer(inputByteBuffer)
-        val outputs = model.process(inputData)
-        val probability = outputs.probabilityAsTensorBuffer
-        model.close()
-        return probability.floatArray
-    }
+//
+//        val audioClip =
+//            TensorBuffer.createFixedSize(intArrayOf(7), DataType.FLOAT32)
+//        audioClip.loadBuffer(outputByteBuffer)
+//        val inputData = TensorBuffer.createFixedSize(
+//            intArrayOf(1, mfccData.size, mfccData[0].size),
+//            DataType.FLOAT32
+//        )
+//        inputData.loadBuffer(inputByteBuffer)
+//        val outputs = model.process(inputData)
+//        val probability = outputs.probabilityAsTensorBuffer
+//        model.close()
+//        return probability.floatArray
+//    }
 
 
 }

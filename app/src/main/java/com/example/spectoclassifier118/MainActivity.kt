@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     private val thirdModelName: String = "ModThird.tflite"
     private val fourthModelName: String = "ModFourth.tflite"
     private val fifthModelName: String = "ModFifth.tflite"
-    private val modelAlt = "modelNoPPL.tflite"
+    private val modelAlt = "model_15.tflite"
 
     private val firstModAudLength: Int = 3195
     private val secModAudLength: Int = 5010
@@ -215,15 +215,16 @@ class MainActivity : AppCompatActivity() {
 
 
                 val resultData = audioData?.get(0)?.let { it1 ->
-                    clsAlt.makeInferenceAlt( this, data = it1,
-                            15900
-                        )
-                    }!!
+                    makePrediction( assets,
+                        modelName = modelAlt, data = it1,
+                        audioLength = 15900, nBatch = 1
+                    )
+                }!!
 
-                Log.d("resultData: ", resultData.joinToString(" "))
+                Log.d("resultData: ", resultData[0].joinToString(" "))
                 val customMaxId =
-                    resultData.maxOrNull().let { it1 -> resultData.indexOfFirst { it == it1 } }!!
-                var customClProb = resultData[customMaxId] * 100.0
+                    resultData[0].maxOrNull()?.let { it1 -> resultData[0].indexOfFirst { it == it1 } }!!
+                var customClProb = resultData[0][customMaxId] * 100.0
                 customClProb = String.format("%.2f", customClProb).toDouble()
                 val customClsName = classes[customMaxId]
                 val altModEndTime = SystemClock.uptimeMillis()

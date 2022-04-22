@@ -98,7 +98,22 @@
         app:layout_constraintTop_toBottomOf = "@+id/txtSpeed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf = "@+id/ll_buttons"  />
+        app:layout_constraintBottom_toTopOf = "@+id/resultAltMod"  />
+
+    <TextView
+        android:id="@+id/resultAltMod"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20sp"
+        android:text="Ord Model Result"
+        android:textColor="@color/teal_700"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf = "@+id/infTime"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf = "@+id/ll_buttons"  />
+
 
     <LinearLayout
         android:id="@+id/ll_buttons"
@@ -135,7 +150,7 @@
         android:id="@+id/ll_orderAudio"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:gravity="center"
         app:layout_constraintTop_toBottomOf = "@+id/ll_buttons"
         app:layout_constraintStart_toStartOf="parent"
@@ -148,6 +163,13 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:text="Play"/>
+
+        <Button
+            android:id="@+id/btnAltClass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:text="NoOpt"/>
 
 <!--        <Button-->
 <!--            android:id="@+id/previous"-->

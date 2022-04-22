@@ -1,11 +1,10 @@
 package com.example.spectoclassifier118.spectoimage
 
-import java.io.IOException
 import com.example.spectoclassifier118.wavreader.FileFormatNotSupportedException
-import com.example.mylibrary.LogMelSpec
-//import com.example.mylibrary.WavFileException
 import com.example.spectoclassifier118.wavreader.JLibrosa
 import com.example.spectoclassifier118.wavreader.WavFileException
+import java.io.IOException
+
 
 
 class LogMelSpecKt() {
@@ -13,14 +12,15 @@ class LogMelSpecKt() {
     lateinit var audioData: FloatArray
     private lateinit var innerPaths: String
     private lateinit var mfcc: Array<FloatArray>
-    private val mfccBin = 40
+    private val mfccBin = 32
     private val sampleRate = 16000
     private val hopLength = 160
     private val numMelBins = 64
     private val numFFT = 400
+//    val audioData = 0
 
     @Throws(IOException::class, WavFileException::class, FileFormatNotSupportedException::class)
-    fun main(Path: String): FloatArray {
+    fun main(data: FloatArray): Array<FloatArray> {
         val defaultSampleRate = -1 // -1 value implies the method to use default sample rate
         val defaultAudioDuration = -1 // -1 value implies the method to process complete audio duration
         val jLibrosa = JLibrosa()
@@ -29,9 +29,10 @@ class LogMelSpecKt() {
          * To read the magnitude values of audio files - equivalent to
          * librosa.load('../audioFiles/0a2b400e_nohash_2_down.wav', sr=None) function
          */
-        val audioFeatureValues =
-            jLibrosa.loadAndRead(Path, defaultSampleRate, defaultAudioDuration)
+//        val audioFeatureValues =
+//            jLibrosa.loadAndRead(Path, defaultSampleRate, defaultAudioDuration)
 //        LogMelSpec.audioData = audioFeatureValues
+        audioData = data
         // System.out.println(audioFeatureValues.length);
         //for (int j = 0; j < 10; j++) {
         //    System.out.printf("%.10f%n", audioFeatureValues[j]);
@@ -48,14 +49,14 @@ class LogMelSpecKt() {
          */
 //        val audioPreemphasisValue = FloatArray(audioFeatureValues.size)
 //        audioPreemphasisValue[0] = audioFeatureValues[0]
-        //System.out.println(audioPreemphasisValue[0]);
+//        //System.out.println(audioPreemphasisValue[0]);
 //        for (i in 1 until audioFeatureValues.size) {
 //            var pre: Double = audioFeatureValues[i] - audioFeatureValues[i - 1] * 0.96875
 //            audioPreemphasisValue[i] = pre.toFloat()
 //        }
 
 
-//        val fixedSizeAudio = handleAudioLength(audioFeatureValues)
+//        val fixedSizeAudio = handleAudioLength(audioPreemphasisValue)
 
         //for (int j = 0; j < 10; j++) {
         //    System.out.printf("%.10f%n", audioPreemphasisValue[j]);
@@ -77,13 +78,19 @@ class LogMelSpecKt() {
         //        System.out.printf("%.10f%n", logmelspec[i][j]);
         //    }
         //}
-//        mfcc = jLibrosa.generateMFCCFeatures(fixedSizeAudio, sampleRate, mfccBin, numFFT, numMelBins, hopLength)
-        return audioFeatureValues
+        mfcc = jLibrosa.generateMFCCFeatures(audioData, sampleRate, mfccBin, numFFT, numMelBins, hopLength)
+        return minMaxScaling(mfcc)
     }
+
+//    fun getAudioDate(path: String): FloatArray {
+//        innerPaths = path
+//        val dd = main(innerPaths)
+//        return audioData
+//    }
 
 
     private fun handleAudioLength(data: FloatArray): FloatArray {
-        val dataLength = 16240
+        val dataLength = 16000
         lateinit var resultArray: FloatArray
         val currentAudioLength = data.size
         resultArray = if (currentAudioLength < dataLength){
@@ -143,14 +150,11 @@ class LogMelSpecKt() {
 
 
 
-//    @JvmName("getAudioData1")
-//    fun getAudioData(): FloatArray? {
-//        return LogMelSpec.audioData
-//    }
 
-    fun getAudio(path: String): FloatArray {
-        innerPaths = path
-        return main(innerPaths)
+
+    fun getMFCC(data: FloatArray): Array<FloatArray> {
+
+        return main(data)
     }
 
 

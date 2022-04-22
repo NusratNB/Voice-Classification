@@ -14,6 +14,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import com.example.spectoclassifier118.utils.LoudnessNormalizer
 
 class SecondModelClassifier {
 
@@ -27,6 +28,7 @@ class SecondModelClassifier {
     private var nBatchSize: Int = 1
     private var nPredictions: Int = 1
     private var MODEL_NAME: String = ""
+    private val loudnessThreshold = -16f
 
 
     @Throws(IOException::class)
@@ -47,8 +49,10 @@ class SecondModelClassifier {
         nBatchSize = nBatch
     }
 
-    private fun handleAudioLength(data: FloatArray, inAudioLength: Int): Triple<Array<FloatArray>, Int, Int> {
+    private fun handleAudioLength(rawData: FloatArray, inAudioLength: Int): Triple<Array<FloatArray>, Int, Int> {
         lateinit var slicedData: Array<FloatArray>
+        val loudnessNormalizer = LoudnessNormalizer()
+        val data = loudnessNormalizer.audioNormalization(loudnessThreshold, rawData)
 
         val currentAudioLength = data.size
         var localNumPredictions = 0

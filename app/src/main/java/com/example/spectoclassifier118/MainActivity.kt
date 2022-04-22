@@ -14,15 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.spectoclassifier118.classifier.CoroutinesHandler
-import com.example.spectoclassifier118.classifier.FirstModelClassifier
-import com.example.spectoclassifier118.classifier.SecondModelClassifier
-import com.example.spectoclassifier118.classifier.ThirdModelClassifier
-import com.example.spectoclassifier118.classifier.FourthModelClassifier
-import com.example.spectoclassifier118.classifier.FifthModelClassifier
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.example.spectoclassifier118.classifier.*
 import java.io.File
 import com.example.spectoclassifier118.spectoimage.RecordWavMaster
 import com.example.spectoclassifier118.wavreader.WavFile
@@ -38,6 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var btnRecord: Button
     lateinit var btnClassification: Button
+    lateinit var btnAltClassification: Button
 
     private lateinit var classifier: CoroutinesHandler
     var dataGenTime: Float = 0.0f
@@ -56,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var fourthModTxt: TextView
     lateinit var fifthModTxt: TextView
     lateinit var infTimeTxt: TextView
+    lateinit var altModTxt: TextView
 
     private lateinit var resultFirst: Array<FloatArray>
     private lateinit var resultSecond: Array<FloatArray>
@@ -69,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private val thirdModelName: String = "ModThird.tflite"
     private val fourthModelName: String = "ModFourth.tflite"
     private val fifthModelName: String = "ModFifth.tflite"
+    private val modelAlt = "modelNoPPL.tflite"
 
     private val firstModAudLength: Int = 3195
     private val secModAudLength: Int = 5010
@@ -119,6 +117,8 @@ class MainActivity : AppCompatActivity() {
     private val thirdClassifier: ThirdModelClassifier = ThirdModelClassifier()
     private val fourthClassifier: FourthModelClassifier = FourthModelClassifier()
     private val fifthClassifier: FifthModelClassifier = FifthModelClassifier()
+    private val clsAlt: ClassifierAlt = ClassifierAlt()
+
 
 
 //    # Audio length
@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity() {
         fourthModTxt = findViewById(R.id.fourthModel)
         fifthModTxt = findViewById(R.id.fifthModel)
         infTimeTxt = findViewById(R.id.infTime)
+        altModTxt = findViewById(R.id.resultAltMod)
 
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { // get permission
@@ -203,6 +204,37 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
+        btnAltClassification = findViewById(R.id.btnAltClass)
+        btnAltClassification.setOnClickListener {
+            //Todo make inference for Alt approach
+            val altModStartTime = SystemClock.uptimeMillis()
+            if (fileName.exists()){
+                val audioData = readMagnitudeValuesFromFile(fileName.path,-1, -1, 0 )
+//                val resultData = clsAlt.makeInferenceAlt(this, audioData, 15900 )
+
+
+                val resultData = audioData?.get(0)?.let { it1 ->
+                    clsAlt.makeInferenceAlt( this, data = it1,
+                            15900
+                        )
+                    }!!
+
+                Log.d("resultData: ", resultData.joinToString(" "))
+                val customMaxId =
+                    resultData.maxOrNull().let { it1 -> resultData.indexOfFirst { it == it1 } }!!
+                var customClProb = resultData[customMaxId] * 100.0
+                customClProb = String.format("%.2f", customClProb).toDouble()
+                val customClsName = classes[customMaxId]
+                val altModEndTime = SystemClock.uptimeMillis()
+                val altModProcessTime = ((altModEndTime - altModStartTime).toFloat())/1000f
+                altModTxt.text = "Result: $customClsName, Prob: $customClProb"
+
+            }
+
+
+        }
+
 
         btnClassification = findViewById(R.id.classificationButton)
         btnClassification.setOnClickListener{
@@ -371,6 +403,9 @@ class MainActivity : AppCompatActivity() {
             fifthClassifier.initBatchSize(nBatch)
             resultDataFifth = data.let { fifthClassifier.makeInference(activity,it, audioLength, modelName) }
             resultData = resultDataFifth
+        }else if (modelName == modelAlt){
+            clsAlt.initBatchSize(nBatch)
+            resultData = data.let { clsAlt.makeInference(activity,it, audioLength, modelName) }
         }
         return resultData
 

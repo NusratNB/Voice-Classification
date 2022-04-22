@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
 import android.util.Log
+import com.example.spectoclassifier118.ml.ModelNoPrePL
+import com.example.spectoclassifier118.spectoimage.LogMelSpecKt
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -16,16 +18,22 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
 
-class ClassifierAlt(ctx: Context, activity: AssetManager){
 
-    private val MODEL_PATH: String = "modeltfNightly.49.tflite"
-    lateinit var testSlicedData: Array<FloatArray>
+class ClassifierAlt{
+
+
+    //    lateinit var testSlicedData: Array<FloatArray>
+    // this is class
+    lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
+    private val nFFT: Int = 320
     private var numFrames: Int = 0
-    private val inputAudioLength: Int = 16240 // 1.015 seconds
-    private val nFFT: Int = 160// 400 // 24 milliseconds
-    private val nBatchSize: Int =16
+    private var inputAudioLength: Int = 0
+    private var nBatchSize: Int = 1
     private var nPredictions: Int = 1
+    private var MODEL_NAME: String = ""
+    private lateinit var mfccGenerator: LogMelSpecKt
+
 
     @Throws(IOException::class)
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {
@@ -36,139 +44,167 @@ class ClassifierAlt(ctx: Context, activity: AssetManager){
         val declaredLength: Long = fileDescriptor.declaredLength
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
-    private val tfLite: Interpreter? = loadModelFile(activity, MODEL_PATH)?.let { Interpreter(it) }
 
-    @SuppressLint("LongLogTag")
-    fun makeInference(data: FloatArray): Array<FloatArray> {
-        val slicedData = handleAudioLength(data)
-        tfLite?.resizeInput(0, intArrayOf(nBatchSize, inputAudioLength))
-        nPredictions = numFrames/nBatchSize
-        Log.d("batchedData nPredictions", nPredictions.toString())
-        Log.d("batchedData numFrames", numFrames.toString())
-
-        lateinit var probability: TensorBuffer
-        var startTime = System.currentTimeMillis()
-        val finalResult = Array(numFrames){FloatArray(11)}
-        var outputs: Unit? = null
-        val batchedData = Array(nPredictions){Array(11){FloatArray(inputAudioLength)} }
-
-        for (i in 0 until nPredictions){
-            batchedData[i] = slicedData.slice(i*nBatchSize until (i+1)*nBatchSize).toTypedArray()
-        }
-        val batchedOutput = Array(nPredictions){Array(nBatchSize){FloatArray(11)} }
-
-        for (s in 0 until nPredictions){
-            testSlicedData = batchedData[s] //Array(nBatchSize){ FloatArray(inputAudioLength) }
-            val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(nBatchSize*4*inputAudioLength )
-            byteBuffer.order(ByteOrder.nativeOrder())
-    //            for (i in slicedData.indices) {
-            for (i in 0 until nBatchSize) {
-                for (j in testSlicedData[i].indices) {
-                    byteBuffer.putFloat(testSlicedData[i][j])
-                }
-            }
-            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(nBatchSize*4*11)
-            outputByteBuffer.order(ByteOrder.nativeOrder())
-    //            }
-            val audioClip = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, 11), DataType.FLOAT32)
-            audioClip.loadBuffer(outputByteBuffer)
-            val inputData = TensorBuffer.createFixedSize(intArrayOf(nBatchSize, inputAudioLength), DataType.FLOAT32)
-            inputData.loadBuffer(byteBuffer)
-
-
-            outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
-            Log.d("Outputs ", audioClip.floatArray.size.toString())
-            Log.d("sliced data size", slicedData.size.toString())
-            val sliceOutput = Array(nBatchSize){FloatArray(11)}
-            for (bb in audioClip.floatArray.indices){
-                Log.d("FloatOut", audioClip.floatArray[bb].toString())
-            }
-            for(i in 0 until nBatchSize) {
-                sliceOutput[i] =
-                    audioClip.floatArray.slice(i * 11 until (i + 1) * 11).toFloatArray()
-            }
-            batchedOutput[s] = sliceOutput
-
-        for (k in audioClip.floatArray.indices){
-            val kk = audioClip.floatArray[k]
-            Log.d("audioClip elements $k", kk.toString())
-        }
-        }
-        var indOut = 0
-        val fullOut = Array(nPredictions*nBatchSize){FloatArray(11)}
-        var ddd = 0
-        for (i in 0 until nPredictions){
-            for (j in 0 until nBatchSize){
-                fullOut[indOut]=batchedOutput[i][j]
-                for (k in 0 until 11){
-                    Log.d("batchedDataa $ddd", batchedOutput[i][j][k].toString())
-                    ddd += 1
-                }
-
-            }
-        }
-        for (ss in fullOut.indices){
-            var indd = fullOut[ss]
-            for (kk in indd.indices){
-                Log.d("fullOut $ss", indd[kk].toString())
-            }
-        }
-
-
-
-//        val byteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 *  inputAudioLength *numFrames )
-//        byteBuffer.order(ByteOrder.nativeOrder())
-//        for (i in slicedData.indices) {
-//            for (j in slicedData[i].indices){
-//                byteBuffer.putFloat(slicedData[i][j])
-//            }
-//        }
-//        val audioClip = TensorBuffer.createFixedSize(intArrayOf(numFrames, inputAudioLength), DataType.FLOAT32)
-//        audioClip.loadBuffer(byteBuffer)
-//
-//        val outputs = model.process(audioClip)
-//        probability = outputs.probabilityAsTensorBuffer
-
-
-        val endTime = System.currentTimeMillis()
-        inferenceTime = (endTime - startTime).toFloat()
-        numFrames = 1
-//        model.close()
-
-        return fullOut
-
+    private fun getModel(activity: AssetManager, modelPath: String): Interpreter? {
+        return loadModelFile(activity, modelPath)?.let { Interpreter(it) }
     }
 
-    private fun handleAudioLength(data: FloatArray): Array<FloatArray> {
+    fun initModelName(modelName: String) {
+        MODEL_NAME = modelName
+    }
+
+    fun initAudioLength(AudioLength: Int) {
+        inputAudioLength = AudioLength
+    }
+
+    fun initBatchSize(nBatch: Int) {
+        nBatchSize = nBatch
+    }
+
+    private fun handleAudioLength(
+        data: FloatArray,
+        inAudioLength: Int
+    ): Pair<Array<FloatArray>, Int> {
         lateinit var slicedData: Array<FloatArray>
 
+
         val currentAudioLength = data.size
+        var localNumPredictions = 1
+        var localNumFrames = 1
 
-        if (currentAudioLength> inputAudioLength){
-            numFrames = (currentAudioLength - inputAudioLength) / nFFT
-            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            Log.d("handleAudio: numFrames", numFrames.toString())
-            for (i in 0 until (numFrames)){
-                slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
+        if (currentAudioLength > inAudioLength) {
+            localNumFrames = (currentAudioLength - inAudioLength) / nFFT
+            if (localNumFrames == 0) {
+                localNumFrames = 1
             }
-
-        }else if (currentAudioLength == inputAudioLength){
-            numFrames = 1
-            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-
-            for (i in 0 until (numFrames)){
-                slicedData[i] = data.slice(i*nFFT until inputAudioLength + i*nFFT).toFloatArray()
+            slicedData = Array(localNumFrames) { FloatArray(inAudioLength) }
+            for (i in 0 until (localNumFrames)) {
+                slicedData[i] = data.slice(i * nFFT until inAudioLength + i * nFFT).toFloatArray()
             }
-        } else{
-            numFrames = 1
-            slicedData = Array(numFrames){FloatArray(inputAudioLength)}
-            val remainedLength = FloatArray(inputAudioLength-currentAudioLength){0.0f}
-            for (i in 0 until (numFrames)){
+            localNumPredictions = localNumFrames / nBatchSize
+        } else if (currentAudioLength == inAudioLength) {
+            localNumFrames = 1
+            slicedData = Array(localNumFrames) { FloatArray(inAudioLength) }
+
+            for (i in 0 until (localNumFrames)) {
+                slicedData[i] = data.slice(i * nFFT until inAudioLength + i * nFFT).toFloatArray()
+            }
+        } else {
+            localNumFrames = 1
+            slicedData = Array(localNumFrames) { FloatArray(inAudioLength) }
+            val remainedLength = FloatArray(inAudioLength - currentAudioLength) { 0.0f }
+            for (i in 0 until (localNumFrames)) {
                 slicedData[i] = data + remainedLength
             }
         }
 
-        return slicedData
+        return Pair(slicedData, localNumFrames)
     }
+
+    @SuppressLint("LongLogTag")
+    fun makeInference(
+        activity: AssetManager,
+        data: FloatArray,
+        inpAudioLength: Int,
+        modName: String
+    ): Array<FloatArray> {
+        val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
+
+        mfccGenerator = LogMelSpecKt()
+
+        val tfLite: Interpreter? = getModel(activity, modName)
+        var outputs: Unit? = null
+//        tfLite?.resizeInput(0, intArrayOf(nBatchSize, inpAudioLength))
+
+        val output = Array(locNumPredictions) { FloatArray(7) }
+
+        for (index in 0 until locNumPredictions){
+            val currentData = slicedData[index]
+            val mfccData = mfccGenerator.getMFCC(currentData)
+
+            val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4 * 7)
+            outputByteBuffer.order(ByteOrder.nativeOrder())
+            Log.d("locNumPredictions", locNumPredictions.toString())
+            for (i in mfccData.indices){
+                Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
+            }
+
+//            Log.d("mfcc.size", mfccData.size.toString())
+//            Log.d("mfcc[0].size", mfccData[0].joinToString(" "))
+
+
+            val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * mfccData.size * (mfccData[0].size))
+            inputByteBuffer.order(ByteOrder.nativeOrder())
+            for (i in mfccData.indices){
+                for (j in (mfccData[0].indices)){
+                    inputByteBuffer.putFloat(mfccData[i][j])
+                }
+            }
+
+            val audioClip =
+                TensorBuffer.createFixedSize(intArrayOf(7), DataType.FLOAT32)
+            audioClip.loadBuffer(outputByteBuffer)
+            val inputData = TensorBuffer.createFixedSize(
+                intArrayOf(1, mfccData.size, mfccData[0].size),
+                DataType.FLOAT32
+            )
+            inputData.loadBuffer(inputByteBuffer)
+            outputs = tfLite?.run(inputData.buffer, audioClip.buffer)
+            output[index] = audioClip.floatArray
+
+        }
+
+        tfLite?.close()
+        return output
+
+    }
+
+    fun makeInferenceAlt(
+        ctx: Context, data: FloatArray,
+        inpAudioLength: Int,): FloatArray {
+
+        val model = ModelNoPrePL.newInstance(ctx)
+//        var rawData = data?.get(0)
+        val (slicedData, locNumPredictions) = handleAudioLength(data, inpAudioLength)
+
+        mfccGenerator = LogMelSpecKt()
+        val currentData = slicedData[0]
+        val mfccData = mfccGenerator.getMFCC(currentData)
+
+//        val audioClip = TensorBuffer.createFixedSize(intArrayOf(1, 100, 32), DataType.FLOAT32)
+        val output = Array(locNumPredictions) { FloatArray(7) }
+        val outputByteBuffer: ByteBuffer = ByteBuffer.allocate(4 * 7)
+        outputByteBuffer.order(ByteOrder.nativeOrder())
+        Log.d("locNumPredictions", locNumPredictions.toString())
+//        for (i in mfccData.indices){
+//            Log.d("mfcc[$i].size", mfccData[i].joinToString(" "))
+//        }
+
+//            Log.d("mfcc.size", mfccData.size.toString())
+//            Log.d("mfcc[0].size", mfccData[0].joinToString(" "))
+
+
+        val inputByteBuffer: ByteBuffer = ByteBuffer.allocateDirect(4 * mfccData.size * (mfccData[0].size))
+        inputByteBuffer.order(ByteOrder.nativeOrder())
+        for (i in mfccData.indices){
+            for (j in (mfccData[0].indices)){
+                inputByteBuffer.putFloat(mfccData[i][j])
+            }
+        }
+
+        val audioClip =
+            TensorBuffer.createFixedSize(intArrayOf(7), DataType.FLOAT32)
+        audioClip.loadBuffer(outputByteBuffer)
+        val inputData = TensorBuffer.createFixedSize(
+            intArrayOf(1, mfccData.size, mfccData[0].size),
+            DataType.FLOAT32
+        )
+        inputData.loadBuffer(inputByteBuffer)
+        val outputs = model.process(inputData)
+        val probability = outputs.probabilityAsTensorBuffer
+        model.close()
+        return probability.floatArray
+    }
+
 
 }

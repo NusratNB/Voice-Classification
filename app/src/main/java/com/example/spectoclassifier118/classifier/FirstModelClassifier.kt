@@ -19,7 +19,7 @@ class FirstModelClassifier {
 
 
     //    lateinit var testSlicedData: Array<FloatArray>
-    lateinit var tfLite: Interpreter
+    private lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 320
     private var numFrames: Int = 0
@@ -93,11 +93,11 @@ class FirstModelClassifier {
 
         if (locNumPredictions == 0){
             localBatchSize = tempNumFrames
-            Log.d("firstMod tempNumFrames", tempNumFrames.toString())
-            Log.d("firstMod localBatchSize", localBatchSize.toString())
-            Log.d("firstMod before locNumPredictions", locNumPredictions.toString())
+//            Log.d("firstMod tempNumFrames", tempNumFrames.toString())
+//            Log.d("firstMod localBatchSize", localBatchSize.toString())
+//            Log.d("firstMod before locNumPredictions", locNumPredictions.toString())
             locNumPredictions = 1
-            Log.d("firstMod after locNumPredictions", locNumPredictions.toString())
+//            Log.d("firstMod after locNumPredictions", locNumPredictions.toString())
 
         } else{
             localBatchSize = nBatchSize
@@ -114,7 +114,7 @@ class FirstModelClassifier {
             for (i in 0 until locNumPredictions){
 
                 batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
-                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
+//                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
             }
         }else{
             batchedData[0] = slicedData
@@ -156,7 +156,7 @@ class FirstModelClassifier {
         for (i in 0 until locNumPredictions){
             for (j in 0 until localBatchSize){
                 fullOut[indOut]=batchedOutput[i][j]
-                Log.d("$modName value $indOut", fullOut[indOut].joinToString(" "))
+//                Log.d("$modName value $indOut", fullOut[indOut].joinToString(" "))
                 indOut += 1
             }
         }

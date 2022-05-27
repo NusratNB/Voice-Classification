@@ -20,7 +20,7 @@ class FourthModelClassifier {
 
 
     //    lateinit var testSlicedData: Array<FloatArray>
-    lateinit var tfLite: Interpreter
+    private lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 320
     private var numFrames: Int = 0
@@ -89,23 +89,23 @@ class FourthModelClassifier {
     fun makeInference(activity: AssetManager, data: FloatArray, inpAudioLength: Int, modName: String): Array<FloatArray> {
         var localBatchSize: Int = 1
         var (slicedData, locNumPredictions, tempNumFrames) = handleAudioLength(data, inpAudioLength)
-        Log.d("fourthMod tempNumFrames", tempNumFrames.toString())
-        Log.d("fourthMod localBatchSize", localBatchSize.toString())
-        Log.d("fourthMod before locNumPredictions", locNumPredictions.toString())
-        Log.d("fourthMod slicedData", slicedData.size.toString())
+//        Log.d("fourthMod tempNumFrames", tempNumFrames.toString())
+//        Log.d("fourthMod localBatchSize", localBatchSize.toString())
+//        Log.d("fourthMod before locNumPredictions", locNumPredictions.toString())
+//        Log.d("fourthMod slicedData", slicedData.size.toString())
 
 
         if (locNumPredictions == 0){
             localBatchSize = tempNumFrames
-            Log.d("fourthMod tempNumFrames", tempNumFrames.toString())
-            Log.d("fourthMod localBatchSize", localBatchSize.toString())
-            Log.d("fourthMod before locNumPredictions", locNumPredictions.toString())
+//            Log.d("fourthMod tempNumFrames", tempNumFrames.toString())
+//            Log.d("fourthMod localBatchSize", localBatchSize.toString())
+//            Log.d("fourthMod before locNumPredictions", locNumPredictions.toString())
             locNumPredictions = 1
-            Log.d("fourthMod after locNumPredictions", locNumPredictions.toString())
+//            Log.d("fourthMod after locNumPredictions", locNumPredictions.toString())
         } else{
             localBatchSize = nBatchSize
         }
-        Log.d("fourthMod afff localBatchSize", localBatchSize.toString())
+//        Log.d("fourthMod afff localBatchSize", localBatchSize.toString())
 
         val tfLite: Interpreter? = getModel(activity, modName)
 
@@ -122,12 +122,12 @@ class FourthModelClassifier {
             for (i in 0 until locNumPredictions){
 
                 batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
-                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
+//                Log.d("batchedData[$i]", batchedData[i][0].size.toString())
             }
         }else{
             batchedData[0] = slicedData
-            Log.d("ffffff batchedData", batchedData.size.toString())
-            Log.d("ffffff batchedData[0]", batchedData[0].size.toString())
+//            Log.d("ffffff batchedData", batchedData.size.toString())
+//            Log.d("ffffff batchedData[0]", batchedData[0].size.toString())
         }
 
         val batchedOutput = Array(locNumPredictions){Array(localBatchSize){FloatArray(7)} }
@@ -139,9 +139,9 @@ class FourthModelClassifier {
             //            for (i in slicedData.indices) {
             if (locNumPredictions>1){
                 for (i in 0 until localBatchSize) {
-                    Log.d("This is $i", i.toString())
-                    Log.d("testSlicedData.size", testSlicedData.size.toString())
-                    Log.d("testSlicedData[$i].size", testSlicedData[i].size.toString())
+//                    Log.d("This is $i", i.toString())
+//                    Log.d("testSlicedData.size", testSlicedData.size.toString())
+//                    Log.d("testSlicedData[$i].size", testSlicedData[i].size.toString())
                     for (j in testSlicedData[i].indices) {
                         byteBuffer.putFloat(testSlicedData[i][j])
                     }
@@ -178,7 +178,7 @@ class FourthModelClassifier {
         for (i in 0 until locNumPredictions){
             for (j in 0 until localBatchSize){
                 fullOut[indOut]=batchedOutput[i][j]
-                Log.d("$modName value $indOut", fullOut[indOut].joinToString(" "))
+//                Log.d("$modName value $indOut", fullOut[indOut].joinToString(" "))
                 indOut += 1
             }
         }

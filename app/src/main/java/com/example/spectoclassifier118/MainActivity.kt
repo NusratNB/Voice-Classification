@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     private val thirdModelName: String = "ModThird.tflite"
     private val fourthModelName: String = "ModFourth.tflite"
     private val fifthModelName: String = "ModFifth.tflite"
-    private val modelAlt = "model_15.tflite"
+    private val modelAlt = "model_07.tflite"
 
     private val firstModAudLength: Int = 3195
     private val secModAudLength: Int = 5010
@@ -217,11 +217,19 @@ class MainActivity : AppCompatActivity() {
                 val resultData = audioData?.get(0)?.let { it1 ->
                     makePrediction( assets,
                         modelName = modelAlt, data = it1,
-                        audioLength = 15900, nBatch = 1
+                        audioLength = 15600, nBatch = 1
                     )
                 }!!
+//                val resultData = audioData?.get(0)?.let { _ ->
+//                    clsAlt.makeInferenceAlt(this, it, 15900)
+//
+//                }
+//                val resultData = clsAlt.makeInferenceAlt(this, audioData?.get(0)!!, 15900)
+//                val resultData = data.let { clsAlt.makeInferenceAlt(this, it, audioLength) }
 
-                Log.d("resultData: ", resultData[0].joinToString(" "))
+
+
+//                Log.d("resultData: ", resultData.joinToString(" "))
                 val customMaxId =
                     resultData[0].maxOrNull()?.let { it1 -> resultData[0].indexOfFirst { it == it1 } }!!
                 var customClProb = resultData[0][customMaxId] * 100.0
@@ -229,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                 val customClsName = classes[customMaxId]
                 val altModEndTime = SystemClock.uptimeMillis()
                 val altModProcessTime = ((altModEndTime - altModStartTime).toFloat())/1000f
-                altModTxt.text = "Result: $customClsName, Prob: $customClProb"
+                altModTxt.text = "Result: $customClsName, Prob: $customClProb, Time: $altModProcessTime"
 
             }
 
@@ -256,15 +264,15 @@ class MainActivity : AppCompatActivity() {
                         }!!
                 }
 
-                val a2 = GlobalScope.async(Dispatchers.IO){
-                    resultSecond =
-                        audioData?.get(0)?.let { it1 ->
-                            makePrediction(assets,
-                                modelName = secondModelName, data = it1,
-                                audioLength = secModAudLength, nBatch = batchSize
-                            )
-                        }!!
-                }
+//                val a2 = GlobalScope.async(Dispatchers.IO){
+//                    resultSecond =
+//                        audioData?.get(0)?.let { it1 ->
+//                            makePrediction(assets,
+//                                modelName = secondModelName, data = it1,
+//                                audioLength = secModAudLength, nBatch = batchSize
+//                            )
+//                        }!!
+//                }
 //
                 val a3 = GlobalScope.async(Dispatchers.Default) {
                     resultThird =
@@ -297,7 +305,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("ssss", "start ui logic")
                 GlobalScope.launch(Dispatchers.Main) {
-                    val differs = listOf(a1, a2, a3, a4, a5)
+                    val differs = listOf(a1,  a3, a4, a5)
                     runBlocking {
                         Log.d("ssss", "start thread logic")
                         differs.awaitAll()
@@ -310,8 +318,8 @@ class MainActivity : AppCompatActivity() {
                     Log.d("firstModGoogProb", firstModGoogProb.toString())
                     firstModGoogClsName = recFilter.googleClsName
 
-                    secModGoogProb = recFilter.googleApproach(resultSecond).toFloat()
-                    secModGoogClsName = recFilter.googleClsName
+//                    secModGoogProb = recFilter.googleApproach(resultSecond).toFloat()
+//                    secModGoogClsName = recFilter.googleClsName
 
                     thirdModGoogProb = recFilter.googleApproach(resultThird).toFloat()
                     thirdModGoogClsName = recFilter.googleClsName
@@ -325,8 +333,8 @@ class MainActivity : AppCompatActivity() {
                     firstModAveProb = recFilter.takeAverage(resultFirst).toFloat()
                     firstModAveClsName = recFilter.customClsName
 
-                    secModAveProb = recFilter.takeAverage(resultSecond).toFloat()
-                    secModAveClsName = recFilter.customClsName
+//                    secModAveProb = recFilter.takeAverage(resultSecond).toFloat()
+//                    secModAveClsName = recFilter.customClsName
 //
                     thirdModAveProb = recFilter.takeAverage(resultThird).toFloat()
                     thirdModAveClsName = recFilter.customClsName
@@ -338,13 +346,13 @@ class MainActivity : AppCompatActivity() {
                     fifthModAveClsName = recFilter.customClsName
 
                     val (firstModSynClsName, firstModSynProb) = recFilter.syntiantApproach(resultFirst)
-                    val (secondModSynClsName, secondModSynProb) = recFilter.syntiantApproach(resultSecond)
+//                    val (secondModSynClsName, secondModSynProb) = recFilter.syntiantApproach(resultSecond)
                     val (thirdModSynClsName, thirdModSynProb) = recFilter.syntiantApproach(resultThird)
                     val (fourthModSynClsName, fourthModSynProb) = recFilter.syntiantApproach(resultFourth)
                     val (fifthModSynClsName, fifthModSynProb) = recFilter.syntiantApproach(resultFifth)
 
                     firstModTxt.text = "1-M GProb: $firstModSynProb GCl: $firstModSynClsName AProb: $firstModAveProb ACl: $firstModAveClsName"
-                    secondModTxt.text = "2-M GProb: $secondModSynProb GCl: $secondModSynClsName AProb: $secModAveProb ACl: $secModAveClsName"
+//                    secondModTxt.text = "2-M GProb: $secondModSynProb GCl: $secondModSynClsName AProb: $secModAveProb ACl: $secModAveClsName"
                     thirdModTxt.text = "3-M GProb: $thirdModSynProb GCl: $thirdModSynClsName AProb: $thirdModAveProb ACl: $thirdModAveClsName"
                     fourthModTxt.text = "4-M GProb: $fourthModSynProb GCl: $fourthModSynClsName AProb: $fourthModAveProb ACl: $fourthModAveClsName"
                     fifthModTxt.text = "5-M GProb: $fifthModSynProb GCl: $fifthModSynClsName AProb: $fifthModAveProb ACl: $fifthModAveClsName"
@@ -404,9 +412,10 @@ class MainActivity : AppCompatActivity() {
             fifthClassifier.initBatchSize(nBatch)
             resultDataFifth = data.let { fifthClassifier.makeInference(activity,it, audioLength, modelName) }
             resultData = resultDataFifth
-        }else if (modelName == modelAlt){
+        }else if (modelName == modelAlt) {
             clsAlt.initBatchSize(nBatch)
-            resultData = data.let { clsAlt.makeInference(activity,it, audioLength, modelName) }
+            resultData = data.let { clsAlt.makeInferenceWithPreProcessingLayer(activity,it, audioLength, modelName) }
+//            return data.let { clsAlt.makeInferenceAlt(this, it, audioLength) }
         }
         return resultData
 

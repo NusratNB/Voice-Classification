@@ -64,6 +64,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-modeldownloader-ktx'
     implementation platform('com.google.firebase:firebase-bom:29.1.0')
     implementation 'org.tensorflow:tensorflow-lite:2.5.0'
-    implementation 'org.tensorflow:tensorflow-lite-gpu:2.5.0'
+//    implementation 'org.tensorflow:tensorflow-lite-gpu:2.5.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

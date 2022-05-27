@@ -19,7 +19,7 @@ class FifthModelClassifier {
 
 
     //    lateinit var testSlicedData: Array<FloatArray>
-    lateinit var tfLite: Interpreter
+    private lateinit var tfLite: Interpreter
     private var inferenceTime: Float = 0.0f
     private val nFFT: Int = 320
     private var numFrames: Int = 0
@@ -111,7 +111,6 @@ class FifthModelClassifier {
 
         if (locNumPredictions>1){
             for (i in 0 until locNumPredictions){
-
                 batchedData[i] = slicedData.slice(i*localBatchSize until (i+1)*localBatchSize).toTypedArray()
                 Log.d("batchedData[$i]", batchedData[i][0].size.toString())
             }

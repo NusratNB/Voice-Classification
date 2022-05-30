@@ -4,7 +4,6 @@ package com.example.spectoclassifier118.classifier
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.content.res.AssetManager
-import android.util.Log
 import org.tensorflow.lite.DataType
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
@@ -17,7 +16,7 @@ import org.tensorflow.lite.support.common.FileUtil
 
 class SoundClassification(ctx: Context) {
 
-    private val modelName = "float_model_08.tflite"
+    private val modelName = "noiseModel/float_model_08.tflite"
     private val inputAudioLength = 15600 // 0.975 sec
     private val clsNum = 4
     var labelOutput: String = ""
@@ -26,7 +25,7 @@ class SoundClassification(ctx: Context) {
 
     init {
         tfLite = getModel(ctx.assets, modelName)
-        labels = FileUtil.loadLabels(ctx, "noise_classes_keepin.txt")
+        labels = FileUtil.loadLabels(ctx, "noiseModel/noise_classes_keepin.txt")
     }
 
     private fun loadModelFile(assetManager: AssetManager, modelPath: String): MappedByteBuffer? {

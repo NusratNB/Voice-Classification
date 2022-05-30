@@ -1,17 +1,14 @@
 package com.example.spectoclassifier118.spectoimage;
 
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.os.Environment;
 import android.text.format.Time;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,8 +24,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.example.spectoclassifier118.classifier.SoundClassification;
 
 public class RecordWavMaster {
+
     private static final int samplingRates[] = {16000, 11025, 11000, 8000, 6000};
     public static int SAMPLE_RATE = 16000;
     private AudioRecord mRecorder;
@@ -44,14 +47,20 @@ public class RecordWavMaster {
     boolean isPlayingMedia = false;
     public static final String TAG = "RecordWavMaster";
     private Thread playingThread;
+    AtomicBoolean isModelAvailable;
+//    AtomicInteger count;
+    SoundClassification sc;
+    public ArrayList<float[]> noiseClassifierResult;
     String fileNameMedia;
     String fileNameAudio;
 
     private String RECORD_WAV_PATH; //= Environment.getExternalStorageDirectory() + File.separator + "AudioRecord";
-    short threshold=500;
+    short threshold = 0;
+
     /* Initializing AudioRecording MIC */
-    public RecordWavMaster(Context ctx,  String path) {
+    public RecordWavMaster(Context ctx, String path) {
         initRecorder(ctx, path);
+        sc = new SoundClassification(ctx);
     }
 
     /* Get Supported Sample Rate */
@@ -66,15 +75,15 @@ public class RecordWavMaster {
     }
 
 
-
     /* Start AudioRecording */
     public void recordWavStart() {
         mIsRecording = true;
         mRecorder.startRecording();
         mRecording = getFile("raw");
+//
         startBufferedWrite(mRecording);
+//        noiseDetect();
     }
-
 
 
     /* Stop AudioRecording */
@@ -92,11 +101,11 @@ public class RecordWavMaster {
         return null;
     }
 
-    int searchThreshold(short[]arr,short thr){
+    int searchThreshold(short[] arr, short thr) {
         int peakIndex;
-        int arrLen=arr.length;
-        for (peakIndex=0;peakIndex<arrLen;peakIndex++){
-            if ((arr[peakIndex]>=thr) || (arr[peakIndex]<=-thr)){
+        int arrLen = arr.length;
+        for (peakIndex = 0; peakIndex < arrLen; peakIndex++) {
+            if ((arr[peakIndex] >= thr) || (arr[peakIndex] <= -thr)) {
                 //se supera la soglia, esci e ritorna peakindex-mezzo kernel.
 
                 return peakIndex;
@@ -104,6 +113,8 @@ public class RecordWavMaster {
         }
         return -1; //not found
     }
+
+
     public void startPlaying(Context ctx, int id, File fileName) {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
@@ -136,30 +147,29 @@ public class RecordWavMaster {
         }
 
 
-        }
+    }
 //    }
+
 
     private void readAudioDataFromFile(Context ctx, File filename) { // called inside Runnable of playingThread
 
         FileInputStream fileInputStream = null;
         try {
             fileInputStream = new FileInputStream(filename);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Toast.makeText(ctx, "Couldn't open file input stream, IOException", Toast.LENGTH_SHORT).show();
             Log.e(TAG, "could not create input stream before using AudioTrack " + e.toString());
             e.printStackTrace();
             return;
         }
-        byte[] data = new byte[BUFFER_SIZE_PLAYING/2];
+        byte[] data = new byte[BUFFER_SIZE_PLAYING / 2];
         int i = 0;
 
         while (isPlayingAudio && (i != -1)) { // continue until run out of data or user stops playback
             try {
                 i = fileInputStream.read(data);
                 audioTrack.write(data, 0, i);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Toast.makeText(ctx, "Couldn't read from file while playing audio, IOException", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Could not read data " + e.toString());
                 e.printStackTrace();
@@ -169,8 +179,7 @@ public class RecordWavMaster {
         }
         try { // finish file operations
             fileInputStream.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Log.e(TAG, "Could not close file input stream " + e.toString());
             e.printStackTrace();
             return;
@@ -186,7 +195,7 @@ public class RecordWavMaster {
     }
 
     private void stopPlaying(int id) {
-            isPlayingAudio = false; // will trigger playingThread to exit while loop
+        isPlayingAudio = false; // will trigger playingThread to exit while loop
 //        }
     }
 
@@ -213,28 +222,77 @@ public class RecordWavMaster {
 
     }
 
+    private void tempNoiseDetection(short[] slicedData) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+//                Log.d("Inference ", "Started");
+                long startTime = System.currentTimeMillis();
+                float[] confidence = sc.makeInference(slicedData);
+                String predClass = sc.getLabelOutput();
+                noiseClassifierResult.add(confidence);
+                long endTime = System.currentTimeMillis();
+                long predTime = endTime - startTime;
+                Log.d("Inference: predClass ", predClass);
+                Log.d("Inference Confidence: ", " " + Arrays.toString(confidence));
+//                Log.d("Inference Time: ", " " + predTime);
+                isModelAvailable.set(true);
+//                count.set(0);
+            }
+        }).start();
+    }
+
+
     /* Writing RAW file */
     private void startBufferedWrite(final File file) {
         new Thread(new Runnable() {
             @Override
             public void run() {
+//                int count = 0;
                 DataOutputStream output = null;
                 try {
+                    isModelAvailable = new AtomicBoolean();
+//                    count = new AtomicInteger();
                     output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+                    ArrayList<Short> slicedData = new ArrayList<>();
+                    noiseClassifierResult = new ArrayList<float[]>();
                     while (mIsRecording) {
                         double sum = 0;
                         int readSize = mRecorder.read(mBuffer, 0, mBuffer.length);
+                        isModelAvailable.set(true);
                         for (int i = 0; i < readSize; i++) {
-                            int foundPeak=searchThreshold(mBuffer,threshold);
-                            if (foundPeak>-1){
-                                output.writeShort(mBuffer[i]);
-                                sum += mBuffer[i] * mBuffer[i];
-                            }
-                            else {
+//                            int foundPeak=searchThreshold(mBuffer,threshold);
+                            output.writeShort(mBuffer[i]);
+                            slicedData.add(mBuffer[i]);
+                            sum += mBuffer[i] * mBuffer[i];
+//                            count.getAndIncrement();
+//                            if (foundPeak>-1){
+//                                output.writeShort(mBuffer[i]);
+//                                slicedData[i] = mBuffer[i];
+//                                sum += mBuffer[i] * mBuffer[i];
+//                                count.getAndIncrement();
+//                            }
 
+//                            Log.d("Inference count",count.toString());
+//                            Log.d("Inference count",isModelAvailable.toString());
+
+                            if (slicedData.size() >=15600 && isModelAvailable.get()) {
+                                long startTime = System.currentTimeMillis();
+                                isModelAvailable.set(false);
+                                short[] tempSlicedData = new short[slicedData.size()];
+                                for (int j = 0; j < slicedData.size(); j++) {
+                                    tempSlicedData[j] = slicedData.get(j);
+                                }
+                                tempNoiseDetection(tempSlicedData);
+                                slicedData.clear();
+                                long endTime = System.currentTimeMillis();
+                                long predTime = endTime - startTime;
+                                Log.d("Inference Time: ", " " + predTime);
                             }
 
                         }
+
                         if (readSize > 0) {
                             final double amplitude = sum / readSize;
                         }
@@ -317,7 +375,7 @@ public class RecordWavMaster {
         return new File(RECORD_WAV_PATH, time.format("%Y%m%d%H%M%S") + "." + suffix);
     }
 
-    public File getAudioName(){
+    public File getAudioName() {
         return waveFile;
     }
 
@@ -339,15 +397,16 @@ public class RecordWavMaster {
         }
     }
 
-    public String getFileName (final String time_suffix) {
-        return (RECORD_WAV_PATH+time_suffix+ "." + "wav");
+    public String getFileName(final String time_suffix) {
+        return (RECORD_WAV_PATH + time_suffix + "." + "wav");
     }
 
-    public Boolean getRecordingState () {
-        if(  mRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED) {
+    public Boolean getRecordingState() {
+        if (mRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED) {
             return false;
         }
         return true;
     }
 }
+
 

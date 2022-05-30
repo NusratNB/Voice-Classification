@@ -26,7 +26,7 @@ import com.example.spectoclassifier118.wavreader.WavFileException
 import com.example.spectoclassifier118.utils.RecognitionFilter
 import kotlinx.coroutines.*
 import java.io.IOException
-
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -192,6 +192,7 @@ class MainActivity : AppCompatActivity() {
                 btnRecord.text = "Recording"
                 recording = false
 
+
             }else{
                 audioRecoder.recordWavStop()
                 btnRecord.text = "Start"
@@ -201,7 +202,12 @@ class MainActivity : AppCompatActivity() {
 //                if (prevFileName.exists()){
 //                    prevFileName.delete()
 //                }
+                val noiseOut = audioRecoder.noiseClassifierResult
+                for (element in noiseOut){
+                    Log.d("Inference noise out", Arrays.toString(element))
+                }
             }
+
 
         }
 

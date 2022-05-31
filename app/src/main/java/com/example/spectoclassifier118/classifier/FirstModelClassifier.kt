@@ -105,7 +105,9 @@ class FirstModelClassifier {
 
 
         val tfLite: Interpreter? = getModel(activity, modName)
-        tfLite?.resizeInput(0, intArrayOf(localBatchSize, inpAudioLength))
+        if (localBatchSize>1){
+            tfLite?.resizeInput(0, intArrayOf(localBatchSize, inpAudioLength))
+        }
 
         var outputs: Unit? = null
         val batchedData = Array(locNumPredictions){Array(localBatchSize){FloatArray(inpAudioLength)} }

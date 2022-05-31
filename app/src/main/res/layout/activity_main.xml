@@ -101,11 +101,11 @@
         app:layout_constraintBottom_toTopOf = "@+id/resultAltMod"  />
 
     <TextView
-        android:id="@+id/resultAltMod"
+        android:id="@+id/resultNoise"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp"
-        android:text="Ord Model Result"
+        android:text="Noise"
         android:textColor="@color/teal_700"
         android:textSize="15sp"
         android:textStyle="bold"

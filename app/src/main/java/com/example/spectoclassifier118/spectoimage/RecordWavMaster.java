@@ -55,7 +55,7 @@ public class RecordWavMaster {
     String fileNameAudio;
 
     private String RECORD_WAV_PATH; //= Environment.getExternalStorageDirectory() + File.separator + "AudioRecord";
-    short threshold = 0;
+    short threshold = 200;
 
     /* Initializing AudioRecording MIC */
     public RecordWavMaster(Context ctx, String path) {
@@ -262,17 +262,17 @@ public class RecordWavMaster {
                         int readSize = mRecorder.read(mBuffer, 0, mBuffer.length);
                         isModelAvailable.set(true);
                         for (int i = 0; i < readSize; i++) {
-//                            int foundPeak=searchThreshold(mBuffer,threshold);
-                            output.writeShort(mBuffer[i]);
+                            int foundPeak=searchThreshold(mBuffer,threshold);
+//                            output.writeShort(mBuffer[i]);
                             slicedData.add(mBuffer[i]);
-                            sum += mBuffer[i] * mBuffer[i];
+//                            sum += mBuffer[i] * mBuffer[i];
 //                            count.getAndIncrement();
-//                            if (foundPeak>-1){
-//                                output.writeShort(mBuffer[i]);
+                            if (foundPeak>-1){
+                                output.writeShort(mBuffer[i]);
 //                                slicedData[i] = mBuffer[i];
-//                                sum += mBuffer[i] * mBuffer[i];
+                                sum += mBuffer[i] * mBuffer[i];
 //                                count.getAndIncrement();
-//                            }
+                            }
 
 //                            Log.d("Inference count",count.toString());
 //                            Log.d("Inference count",isModelAvailable.toString());

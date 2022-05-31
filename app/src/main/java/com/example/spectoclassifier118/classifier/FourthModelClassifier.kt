@@ -110,7 +110,9 @@ class FourthModelClassifier {
         val tfLite: Interpreter? = getModel(activity, modName)
 
 
-        tfLite?.resizeInput(0, intArrayOf(localBatchSize, inpAudioLength))
+        if (localBatchSize>1){
+            tfLite?.resizeInput(0, intArrayOf(localBatchSize, inpAudioLength))
+        }
 
 
 

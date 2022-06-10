@@ -222,96 +222,101 @@ public class RecordWavMaster {
 
     }
 
-    private void tempNoiseDetection(short[] slicedData) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+    private void tempNoiseDetection(short[] slicedDataNoise) {
+        new Thread(() -> {
 
 //                Log.d("Inference ", "Started");
-                long startTime = System.currentTimeMillis();
-                float[] confidence = sc.makeInference(slicedData);
-                String predClass = sc.getLabelOutput();
-                noiseClassifierResult.add(confidence);
-                long endTime = System.currentTimeMillis();
-                long predTime = endTime - startTime;
-                Log.d("Inference: predClass ", predClass);
-                Log.d("Inference Confidence: ", " " + Arrays.toString(confidence));
+            long startTime = System.currentTimeMillis();
+            float[] confidence = sc.makeInference(slicedDataNoise);
+            String predClass = sc.getLabelOutput();
+            noiseClassifierResult.add(confidence);
+            long endTime = System.currentTimeMillis();
+            long predTime = endTime - startTime;
+//                Log.d("Inference tempNoise", " "+ predTime);
+            Log.d("Inference: predClass ", predClass);
+            Log.d("Inference Confidence: ", " " + Arrays.toString(confidence));
 //                Log.d("Inference Time: ", " " + predTime);
-                isModelAvailable.set(true);
+            isModelAvailable.set(true);
 //                count.set(0);
-            }
         }).start();
     }
 
 
     /* Writing RAW file */
     private void startBufferedWrite(final File file) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
 //                int count = 0;
-                DataOutputStream output = null;
-                try {
-                    isModelAvailable = new AtomicBoolean();
+            DataOutputStream output = null;
+            try {
+                isModelAvailable = new AtomicBoolean();
 //                    count = new AtomicInteger();
-                    output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-                    ArrayList<Short> slicedData = new ArrayList<>();
-                    noiseClassifierResult = new ArrayList<float[]>();
-                    while (mIsRecording) {
-                        double sum = 0;
-                        int readSize = mRecorder.read(mBuffer, 0, mBuffer.length);
-                        isModelAvailable.set(true);
-                        for (int i = 0; i < readSize; i++) {
-                            int foundPeak=searchThreshold(mBuffer,threshold);
+                output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+                ArrayList<Short> slicedData = new ArrayList<>();
+                noiseClassifierResult = new ArrayList<float[]>();
+                long startTime = System.currentTimeMillis();
+                while (mIsRecording) {
+//                        Log.d("Inference ", "Inside of the mIsRecording");
+                    double sum = 0;
+
+                    long startTimeReadSize = System.currentTimeMillis();
+                    int readSize = mRecorder.read(mBuffer, 0, mBuffer.length);
+                    long finishTimeReadSize = System.currentTimeMillis();
+                    long predTimeReadSize = finishTimeReadSize - startTimeReadSize;
+//                        Log.d("Inference readsize"," "+predTimeReadSize);
+                    isModelAvailable.set(true);
+                    for (int i = 0; i < readSize; i++) {
+//                            int foundPeak=searchThreshold(mBuffer,threshold);
 //                            output.writeShort(mBuffer[i]);
-                            slicedData.add(mBuffer[i]);
+                        slicedData.add(mBuffer[i]);
+//                            Log.d("mBufferTest", " "+ Arrays.toString(mBuffer));
 //                            sum += mBuffer[i] * mBuffer[i];
 //                            count.getAndIncrement();
-                            if (foundPeak>-1){
-                                output.writeShort(mBuffer[i]);
+//                            if (foundPeak>-1){
+                        output.writeShort(mBuffer[i]);
 //                                slicedData[i] = mBuffer[i];
-                                sum += mBuffer[i] * mBuffer[i];
+//                            sum += mBuffer[i] * mBuffer[i];
 //                                count.getAndIncrement();
-                            }
+//                            }
 
 //                            Log.d("Inference count",count.toString());
 //                            Log.d("Inference count",isModelAvailable.toString());
 
-                            if (slicedData.size() >=15600 && isModelAvailable.get()) {
-                                long startTime = System.currentTimeMillis();
-                                isModelAvailable.set(false);
-                                short[] tempSlicedData = new short[slicedData.size()];
-                                for (int j = 0; j < slicedData.size(); j++) {
-                                    tempSlicedData[j] = slicedData.get(j);
-                                }
-                                tempNoiseDetection(tempSlicedData);
-                                slicedData.clear();
-                                long endTime = System.currentTimeMillis();
-                                long predTime = endTime - startTime;
-                                Log.d("Inference Time: ", " " + predTime);
+                        if (slicedData.size() >=15600 && isModelAvailable.get()) {
+
+                            isModelAvailable.set(false);
+                            short[] tempSlicedData = new short[15600];
+                            for (int j = 0; j < tempSlicedData.length; j++) {
+                                tempSlicedData[j] = slicedData.get(slicedData.size()-tempSlicedData.length+j);
                             }
-
+                            Log.d("Inference tempSliceData", ""+tempSlicedData.length);
+                            Log.d("Inference slicedData", ""+slicedData.size());
+                            tempNoiseDetection(tempSlicedData);
+                            slicedData.clear();
+                            long endTime = System.currentTimeMillis();
+                            long predTime = endTime - startTime;
+                            Log.d("Inference Time: ", " " + predTime);
                         }
 
-                        if (readSize > 0) {
-                            final double amplitude = sum / readSize;
-                        }
                     }
-                } catch (IOException e) {
-                    Log.e("Error writing file : ", e.getMessage());
-                } finally {
 
-                    if (output != null) {
+                    if (readSize > 0) {
+                        final double amplitude = sum / readSize;
+                    }
+                }
+            } catch (IOException e) {
+                Log.e("Error writing file : ", e.getMessage());
+            } finally {
+
+                if (output != null) {
+                    try {
+                        output.flush();
+                    } catch (IOException e) {
+                        Log.e("Error writing file : ", e.getMessage());
+                    } finally {
                         try {
-                            output.flush();
+                            output.close();
                         } catch (IOException e) {
                             Log.e("Error writing file : ", e.getMessage());
-                        } finally {
-                            try {
-                                output.close();
-                            } catch (IOException e) {
-                                Log.e("Error writing file : ", e.getMessage());
-                            }
                         }
                     }
                 }

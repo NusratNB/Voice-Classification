@@ -19,7 +19,7 @@ class RecognitionFilter {
 
 //    fun getSmoothedData(data: Array<FloatArray>): Array<FloatArray> {
 //        val nFrames = data.size
-//        val smOut = SmoothOutput(nFrames)
+//        val smOut = SmoothOutput()
 //        return smOut.smoothData(data)
 //    }
 
@@ -33,7 +33,7 @@ class RecognitionFilter {
         if (nFrames == 0){
             nFrames = 1
         }
-        val smOut = SmoothOutput(nFrames)
+        val smOut = SmoothOutput()
         val smoothedData = smOut.smoothData(res)
         for (i in smoothedData.indices){
             googlePh[i] = (smoothedData[i].average().toFloat())
@@ -53,7 +53,7 @@ class RecognitionFilter {
     fun takeAverage(res: Array<FloatArray>): Double{
 
         val nFrames = res.size
-        val smOut = SmoothOutput(nFrames)
+        val smOut = SmoothOutput()
         val customPh = FloatArray(numClasses)
         val transposedData = smOut.transposeOutput(res.size, res)
         for (i in transposedData.indices){
@@ -75,7 +75,7 @@ class RecognitionFilter {
         val consFramesThreshold = 5
         val synNFrames = res.size
         Log.d("syntiant synNFrames", synNFrames.toString())
-        val so = SmoothOutput(synNFrames)
+        val so = SmoothOutput()
         var countThV1 = 0
         var countThV2 = 0
         var resClass = ""

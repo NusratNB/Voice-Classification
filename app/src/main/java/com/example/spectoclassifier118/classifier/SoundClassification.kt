@@ -45,8 +45,13 @@ class SoundClassification(ctx: Context) {
         lateinit var slicedData: ShortArray
         val currentAudioLength = data.size
         val inputAudioLength = 15600
-        val begin = currentAudioLength -inputAudioLength
-        slicedData = data.slice(begin until inputAudioLength).toShortArray()
+        if (currentAudioLength>=inputAudioLength){
+            val begin = currentAudioLength - inputAudioLength
+            slicedData = data.slice(begin until inputAudioLength).toShortArray()
+        }else{
+
+        }
+
         return slicedData
 
     }

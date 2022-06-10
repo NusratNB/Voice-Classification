@@ -55,11 +55,16 @@ class MainActivity : AppCompatActivity() {
     lateinit var infTimeTxt: TextView
     lateinit var resultNoise: TextView
 
-    private lateinit var resultFirst: Array<FloatArray>
-    private lateinit var resultSecond: Array<FloatArray>
-    lateinit var resultThird: Array<FloatArray>
-    private lateinit var resultFourth: Array<FloatArray>
-    private lateinit var resultFifth: Array<FloatArray>
+//    private lateinit var resultFirst: Array<FloatArray>
+//    private lateinit var resultSecond: Array<FloatArray>
+//    lateinit var resultThird: Array<FloatArray>
+//    private lateinit var resultFourth: Array<FloatArray>
+//    private lateinit var resultFifth: Array<FloatArray>
+    private var resultFirst =  arrayOf<FloatArray>()
+    private var resultSecond =  arrayOf<FloatArray>()
+    private var resultThird =  arrayOf<FloatArray>()
+    private var resultFourth =  arrayOf<FloatArray>()
+    private var resultFifth =  arrayOf<FloatArray>()
     var nFrames: Int = 1
 
     private lateinit var firstModelName: String
@@ -208,21 +213,27 @@ class MainActivity : AppCompatActivity() {
 
                 val noiseOut = audioRecoder.noiseClassifierResult
                 val noiseArray = Array(noiseOut.size){FloatArray(4)}
-                Log.d("nFrames noiseOut", noiseOut.size.toString())
+//                Log.d("nFrames noiseOut", noiseOut.size.toString())
+//                Log.d("nFrames noiseOut[0]", noiseOut[0].size.toString())
 
                 for (i in noiseOut.indices){
                     noiseArray[i] = noiseOut[i]
                     Log.d("Inference noise out", Arrays.toString(noiseOut[i]))
                 }
-                val noiseModAveProb = recFilterNoise.takeAverage(noiseArray)
-                val noiseModAveClsName = recFilterNoise.customClsName
-                val (noiseModSynClsName, noiseModSynProb) = recFilterNoise.syntiantApproach(noiseArray)
-                resultNoise.text = "Noise SProb: $noiseModSynProb SCl: $noiseModSynClsName AProb: $noiseModAveProb ACl: $noiseModAveClsName"
-                noiseType = if (noiseModSynProb>noiseModAveProb){
-                    noiseModSynClsName
-                }else{
-                    noiseModAveClsName
+                try {
+                    val noiseModAveProb = recFilterNoise.takeAverage(noiseArray)
+                    val noiseModAveClsName = recFilterNoise.customClsName
+                    val (noiseModSynClsName, noiseModSynProb) = recFilterNoise.syntiantApproach(noiseArray)
+                    resultNoise.text = "Noise SProb: $noiseModSynProb SCl: $noiseModSynClsName AProb: $noiseModAveProb ACl: $noiseModAveClsName"
+                    noiseType = if (noiseModSynProb>noiseModAveProb){
+                        noiseModSynClsName
+                    }else{
+                        noiseModAveClsName
+                    }
+                } catch ( e: ArrayIndexOutOfBoundsException){
+                    noiseType = "General"
                 }
+
                 Log.d("Inference noiseType", noiseType)
                 firstModelName = noiseType + "/" + noiseType + "Model3195Inp.tflite"
                 secondModelName = noiseType + "/" + noiseType + "Model5010Inp.tflite"
@@ -231,8 +242,6 @@ class MainActivity : AppCompatActivity() {
                 fifthModelName = noiseType + "/" + noiseType + "Model15900Inp.tflite"
 
             }
-
-
         }
 
 //        btnAltClassification = findViewById(R.id.btnAltClass)

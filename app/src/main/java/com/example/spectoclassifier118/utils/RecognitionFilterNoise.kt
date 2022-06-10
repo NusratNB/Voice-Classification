@@ -2,6 +2,7 @@ package com.example.spectoclassifier118.utils
 
 import android.annotation.SuppressLint
 import android.util.Log
+import java.util.*
 import kotlin.math.floor
 import kotlin.properties.Delegates
 
@@ -34,7 +35,7 @@ class RecognitionFilterNoise {
         if (nFrames == 0){
             nFrames = 1
         }
-        val smOut = SmoothOutput(nFrames)
+        val smOut = SmoothOutput()
         val smoothedData = smOut.smoothData(res)
         for (i in smoothedData.indices){
             googlePh[i] = (smoothedData[i].average().toFloat())
@@ -54,9 +55,10 @@ class RecognitionFilterNoise {
     fun takeAverage(res: Array<FloatArray>): Double{
 
         val nFrames = res.size
-        val smOut = SmoothOutput(nFrames)
+        val smOut = SmoothOutput()
         var customPh = FloatArray(numClasses)
         Log.d("nFrames size", nFrames.toString())
+        Log.d("nFrames full", Arrays.toString(res))
         if (nFrames == 1 || nFrames == 0){
             customPh = res[0]
         }else{
@@ -82,7 +84,7 @@ class RecognitionFilterNoise {
         val consFramesThreshold = 2
         val synNFrames = res.size
         Log.d("syntiant synNFrames", synNFrames.toString())
-        val so = SmoothOutput(synNFrames)
+        val so = SmoothOutput()
         var countThV1 = 0
         var countThV2 = 0
         var resClass = "NA"

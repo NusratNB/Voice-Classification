@@ -3,13 +3,11 @@ package com.example.spectoclassifier118.utils
 
 import kotlin.math.max
 
-class SmoothOutput(nFrames: Int) {
-
-    var nFrames: Int = nFrames
+class SmoothOutput {
     lateinit var transpose: Array<FloatArray>
 
     fun transposeOutput(numFrames: Int, data: Array<FloatArray>): Array<FloatArray> {
-        nFrames = numFrames
+        val nFrames = data.size
         val nClasses = data[0].size
         transpose = Array(nClasses){FloatArray(nFrames)}
         for (i in 0 until nFrames){
@@ -22,7 +20,7 @@ class SmoothOutput(nFrames: Int) {
     }
 
     fun smoothData(data: Array<FloatArray>): Array<FloatArray> {
-        nFrames = data.size
+        val nFrames = data.size
         val nClasses = data[0].size
         val transposedData = transposeOutput(nFrames, data)
         val wSmooth = 10
